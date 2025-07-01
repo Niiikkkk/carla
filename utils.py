@@ -126,6 +126,8 @@ def spawn_ego_vehicle(world,client,args):
         print("Vehicle spawned successfully at location:", vehicle.get_transform())
     return vehicle
 
+ds
+
 
 def generate_traffic(args,world,client):
     """Generate traffic in the CARLA simulator.
