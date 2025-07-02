@@ -120,6 +120,7 @@ def main(args):
                     more_distance = 0
                     first_iter = True
                     for anomaly_obj in anomalies:
+                        print(anomaly_obj.anomaly.get_transform().rotation)
                         # Get the distance vector between the ego vehicle and the anomaly
                         difference = ego_location - anomaly_obj.anomaly.get_transform().location
                         difference_vector = carla.Vector3D(difference.x, difference.y, difference.z)
