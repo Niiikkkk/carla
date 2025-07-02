@@ -123,7 +123,6 @@ def main(args):
                     first_iter = True
                     for anomaly_obj in anomalies:
                         # Get the distance vector between the ego vehicle and the anomaly
-                        print(anomaly_obj.anomaly.get_transform().location)
                         difference = ego_location - anomaly_obj.anomaly.get_transform().location
                         difference_vector = carla.Vector3D(difference.x, difference.y, difference.z)
                         ego_fw = ego_vehicle.get_transform().get_forward_vector()
@@ -212,15 +211,15 @@ def set_up_sensors(args, client, ego_vehicle, sensors, world):
 
 def generate_anomaly_object(world, client, ego_vehicle, name, distance, where, direction, anomaly_in_waypoint):
     if name == "labrador":
-        return Labrador_Anomaly(world, client, name, ego_vehicle, distance, "front", "left", True)
+        return Labrador_Anomaly(world, client, name, ego_vehicle, True)
     if name == "baseballbat":
-        return Baseballbat_Anomaly(world, client, name, ego_vehicle, distance/2, "front", "right", False)
+        return Baseballbat_Anomaly(world, client, name, ego_vehicle, False)
     if name == "basketball":
-        return Basketball_Anomaly(world, client, name, ego_vehicle, distance/1.5, "left", "right", False)
+        return Basketball_Anomaly(world, client, name, ego_vehicle, False)
     if name == "person":
-        return Person_Anomaly(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+        return Person_Anomaly(world, client, name, ego_vehicle, anomaly_in_waypoint)
     if name == "tree":
-        return Tree_Anomaly(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+        return Tree_Anomaly(world, client, name, ego_vehicle, anomaly_in_waypoint)
     return None
 
 

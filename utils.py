@@ -552,7 +552,7 @@ def view_lidar(lidar_name):
     pcd = o3d.io.read_point_cloud("output/lidar/",lidar_name)
     o3d.visualization.draw_geometries([pcd])
 
-def spawn_anomaly(world,client,ego_vehicle,prop,distance=10,where="front",direction="forward",anomaly_in_waypoint=True):
+def spawn_anomaly(world,client,ego_vehicle,prop,anomaly_in_waypoint=True):
     """Spawn an anomaly in the CARLA simulator.
     Args:
         world (carla.World): The CARLA world object.
@@ -564,18 +564,11 @@ def spawn_anomaly(world,client,ego_vehicle,prop,distance=10,where="front",direct
     forward_vector = ego_vehicle.get_transform().rotation.get_forward_vector()
     right_vector = ego_vehicle.get_transform().rotation.get_right_vector()
     # Now add the distance to the vehicle's location to get the new location, the distance will be based on the vehicle's forward vector
-
-    if where == "front":
-        direction_vector = distance*forward_vector
-    elif where == "right":
-        direction_vector = 5*right_vector + distance*forward_vector
-    elif where == "left":
-        direction_vector = 5*right_vector*(-1) + distance*forward_vector
-    else:
-        print(f"Invalid location {where}. Using front as default.")
-        direction_vector = distance*forward_vector
-    location = ego_vehicle.get_transform().location + direction_vector
-    location.z = 1 # Set the z coordinate to 0 to spawn on the ground
+    distance = random.randint(10,20)
+    right_left = random.randint(-6,6)
+    distance_vector = right_left*right_vector + distance*forward_vector
+    location = ego_vehicle.get_transform().location + distance_vector
+    location.z = 0.1 # Set the z coordinate to 0 to spawn on the ground
 
     bp_lib:carla.BlueprintLibrary = world.get_blueprint_library()
     anomalies = bp_lib.filter(f"*{prop}")
@@ -585,21 +578,13 @@ def spawn_anomaly(world,client,ego_vehicle,prop,distance=10,where="front",direct
     anomaly:carla.ActorBlueprint = anomalies[0]
 
     rotation = ego_vehicle.get_transform().rotation
-    print(rotation)
-    if direction == "forward":
-        rotation.yaw += 0
-    elif direction == "backward":
-        rotation.yaw += 180
-    elif direction == "right":
-        rotation.yaw += 90
-    elif direction == "left":
-        rotation.yaw += -90
+    rotation.yaw = random.randint(-180,180)
 
     transform:carla.Transform = carla.Transform(location,rotation)
     if anomaly_in_waypoint:
         wp = map.get_waypoint(transform.location, project_to_road=True, lane_type=carla.LaneType.Sidewalk)
         transform.location = wp.transform.location
-        transform.location.z = 0.5
+        transform.location.z = 0.1
     anomaly_actor:carla.Actor = world.try_spawn_actor(anomaly, transform)
     if anomaly_actor is None:
         print(f"Failed to spawn {prop} anomaly.")

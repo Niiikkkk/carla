@@ -1,13 +1,10 @@
 from utils import *
 
 class Anomaly:
-    def __init__(self, world: carla.World, client: carla.Client, name ,ego_vehicle, distance, where, direction, anomaly_in_waypoint):
+    def __init__(self, world: carla.World, client: carla.Client, name ,ego_vehicle, anomaly_in_waypoint):
         self.world = world
         self.client = client
         self.ego_vehicle = ego_vehicle
-        self.distance = distance
-        self.where = where
-        self.direction = direction
         self.anomaly_in_waypoint = anomaly_in_waypoint
         self.map:carla.Map = self.world.get_map()
         self.name = name
@@ -15,7 +12,7 @@ class Anomaly:
 
     def spawn_anomaly(self):
         print("Spawning anomaly...", self.name)
-        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.distance, self.where, self.direction, self.anomaly_in_waypoint)
+        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.anomaly_in_waypoint)
         self.anomaly = anomaly
         print("Anomaly Spawned!")
         return anomaly
@@ -24,8 +21,8 @@ class Anomaly:
         raise NotImplementedError("This method should be overridden by subclasses")
 
 class Labrador_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, distance, where, direction, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
+        super().__init__(world, client, name, ego_vehicle, anomaly_in_waypoint)
         self.distance_from_sidewalk = 2
         self.is_dynamic = True
 
@@ -39,8 +36,8 @@ class Labrador_Anomaly(Anomaly):
         return super().spawn_anomaly()
 
 class Baseballbat_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, distance, where, direction, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
+        super().__init__(world, client, name, ego_vehicle, anomaly_in_waypoint)
         self.is_dynamic = False
 
     def handle_semantic_tag(self):
@@ -50,8 +47,8 @@ class Baseballbat_Anomaly(Anomaly):
         return super().spawn_anomaly()
 
 class Basketball_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, distance, where, direction, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
+        super().__init__(world, client, name, ego_vehicle, anomaly_in_waypoint)
         self.is_dynamic = False
 
     def handle_semantic_tag(self):
@@ -61,8 +58,8 @@ class Basketball_Anomaly(Anomaly):
         return super().spawn_anomaly()
 
 class Person_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, distance, where, direction, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
+        super().__init__(world, client, name, ego_vehicle, anomaly_in_waypoint)
         self.is_dynamic = True
 
     def handle_semantic_tag(self):
@@ -75,8 +72,8 @@ class Person_Anomaly(Anomaly):
         return super().spawn_anomaly()
 
 class Tree_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, distance, where, direction, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
+        super().__init__(world, client, name, ego_vehicle, anomaly_in_waypoint)
         self.is_dynamic = True
 
     def handle_semantic_tag(self):
