@@ -552,7 +552,7 @@ def view_lidar(lidar_name):
     pcd = o3d.io.read_point_cloud("output/lidar/",lidar_name)
     o3d.visualization.draw_geometries([pcd])
 
-def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,anomaly_in_waypoint=True):
+def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,anomaly_in_waypoint=True):
     """Spawn an anomaly in the CARLA simulator.
     Args:
         world (carla.World): The CARLA world object.
@@ -574,7 +574,10 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,anomaly_in_waypoint=T
         right_left = random.randint(4,6)
     distance_vector = right_left*right_vector + distance*forward_vector
     location = ego_vehicle.get_transform().location + distance_vector
-    location.z = 0.1 # Set the z coordinate to 0 to spawn on the ground
+    if is_character:
+        location.z = 1
+    else:
+        location.z = 0.1 # Set the z coordinate to 0 to spawn on the ground
 
     bp_lib:carla.BlueprintLibrary = world.get_blueprint_library()
     anomalies = bp_lib.filter(f"*{prop}")
@@ -593,8 +596,8 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,anomaly_in_waypoint=T
     transform:carla.Transform = carla.Transform(location,rotation)
     if anomaly_in_waypoint:
         wp = map.get_waypoint(transform.location, project_to_road=True, lane_type=carla.LaneType.Sidewalk)
-        transform.location = wp.transform.location
-        transform.location.z = 1
+        transform.location.x = wp.transform.location.x
+        transform.location.y = wp.transform.location.y
     anomaly_actor:carla.Actor = world.try_spawn_actor(anomaly, transform)
     if anomaly_actor is None:
         print(f"Failed to spawn {prop} anomaly.")
