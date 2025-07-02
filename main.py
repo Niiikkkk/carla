@@ -64,9 +64,7 @@ def main(args):
             # Spawn the anomalies
             if args.anomalies:
                 for str_anomaly in args.anomalies:
-                    anomaly_object = generate_anomaly_object(world, client, ego_vehicle, str_anomaly,
-                                                             args.anomaly_distance, args.anomaly_location,
-                                                             args.anomaly_direction, args.anomaly_in_waypoint)
+                    anomaly_object = generate_anomaly_object(world, client, ego_vehicle, str_anomaly)
                     anomaly: carla.Actor = anomaly_object.spawn_anomaly()
                     if anomaly is None:
                         raise Exception("Anomaly not spawned")
@@ -209,17 +207,17 @@ def set_up_sensors(args, client, ego_vehicle, sensors, world):
         instance_sen.listen(lambda data: instance_queue.append(data))
         sensors.append(Instant_Segmentation_Sensor(instance_queue,instance_sen))
 
-def generate_anomaly_object(world, client, ego_vehicle, name, distance, where, direction, anomaly_in_waypoint):
+def generate_anomaly_object(world, client, ego_vehicle, name):
     if name == "labrador":
-        return Labrador_Anomaly(world, client, name, ego_vehicle, True)
+        return Labrador_Anomaly(world, client, name, ego_vehicle)
     if name == "baseballbat":
-        return Baseballbat_Anomaly(world, client, name, ego_vehicle, False)
+        return Baseballbat_Anomaly(world, client, name, ego_vehicle)
     if name == "basketball":
-        return Basketball_Anomaly(world, client, name, ego_vehicle, False)
+        return Basketball_Anomaly(world, client, name, ego_vehicle)
     if name == "person":
-        return Person_Anomaly(world, client, name, ego_vehicle, anomaly_in_waypoint)
+        return Person_Anomaly(world, client, name, ego_vehicle)
     if name == "tree":
-        return Tree_Anomaly(world, client, name, ego_vehicle, anomaly_in_waypoint)
+        return Tree_Anomaly(world, client, name, ego_vehicle)
     return None
 
 

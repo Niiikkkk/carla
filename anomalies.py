@@ -23,8 +23,8 @@ class Anomaly:
         raise NotImplementedError("This method should be overridden by subclasses")
 
 class Labrador_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, True, True, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, True, True, True)
         self.distance_from_sidewalk = 2
 
     def handle_semantic_tag(self):
@@ -37,8 +37,8 @@ class Labrador_Anomaly(Anomaly):
         return super().spawn_anomaly()
 
 class Baseballbat_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, False, False, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -47,8 +47,8 @@ class Baseballbat_Anomaly(Anomaly):
         return super().spawn_anomaly()
 
 class Basketball_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, False, False, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -57,8 +57,8 @@ class Basketball_Anomaly(Anomaly):
         return super().spawn_anomaly()
 
 class Person_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, True, True, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, True, True, True)
 
     def handle_semantic_tag(self):
         current_wp_loc = self.map.get_waypoint(self.anomaly.get_location(), project_to_road=True, lane_type=carla.LaneType.Sidewalk).transform.location
@@ -70,8 +70,8 @@ class Person_Anomaly(Anomaly):
         return super().spawn_anomaly()
 
 class Tree_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, anomaly_in_waypoint):
-        super().__init__(world, client, name, ego_vehicle, True, False, anomaly_in_waypoint)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, True, False, True)
 
     def handle_semantic_tag(self):
         pass
