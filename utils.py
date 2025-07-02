@@ -126,9 +126,6 @@ def spawn_ego_vehicle(world,client,args):
         print("Vehicle spawned successfully at location:", vehicle.get_transform())
     return vehicle
 
-ds
-
-
 def generate_traffic(args,world,client):
     """Generate traffic in the CARLA simulator.
     Args:
@@ -567,6 +564,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,distance=10,where="front",direct
     forward_vector = ego_vehicle.get_transform().rotation.get_forward_vector()
     right_vector = ego_vehicle.get_transform().rotation.get_right_vector()
     # Now add the distance to the vehicle's location to get the new location, the distance will be based on the vehicle's forward vector
+
     if where == "front":
         direction_vector = distance*forward_vector
     elif where == "right":
@@ -601,7 +599,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,distance=10,where="front",direct
     if anomaly_in_waypoint:
         wp = map.get_waypoint(transform.location, project_to_road=True, lane_type=carla.LaneType.Sidewalk)
         transform.location = wp.transform.location
-        transform.location.z = 1
+        transform.location.z = 0.5
     anomaly_actor:carla.Actor = world.try_spawn_actor(anomaly, transform)
     if anomaly_actor is None:
         print(f"Failed to spawn {prop} anomaly.")

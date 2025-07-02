@@ -73,3 +73,14 @@ class Person_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+class Tree_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, distance, where, direction, anomaly_in_waypoint):
+        super().__init__(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+        self.is_dynamic = True
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        return super().spawn_anomaly()

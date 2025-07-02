@@ -123,6 +123,7 @@ def main(args):
                     first_iter = True
                     for anomaly_obj in anomalies:
                         # Get the distance vector between the ego vehicle and the anomaly
+                        print(anomaly_obj.anomaly.get_transform().location)
                         difference = ego_location - anomaly_obj.anomaly.get_transform().location
                         difference_vector = carla.Vector3D(difference.x, difference.y, difference.z)
                         ego_fw = ego_vehicle.get_transform().get_forward_vector()
@@ -135,7 +136,6 @@ def main(args):
                             if dot < more_distance:
                                 more_distance = dot
                                 more_distance_anomaly = anomaly_obj.anomaly
-
                     # Compute the difference vector and the dot product
                     if more_distance > 0:
                         print(f"Ego vehicle passed the furthest anomaly {more_distance_anomaly}, stopping simulation...")
@@ -219,6 +219,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name, distance, where, d
         return Basketball_Anomaly(world, client, name, ego_vehicle, distance/1.5, "left", "right", False)
     if name == "person":
         return Person_Anomaly(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
+    if name == "tree":
+        return Tree_Anomaly(world, client, name, ego_vehicle, distance, where, direction, anomaly_in_waypoint)
     return None
 
 
