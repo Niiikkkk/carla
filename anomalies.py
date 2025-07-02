@@ -76,6 +76,7 @@ class Tree_Anomaly(Anomaly):
     def handle_semantic_tag(self):
         #If the tree is starting to fall, we want to set the semantic tag to Dynamic_Anomaly
         current_rotation = self.anomaly.get_transform().rotation
+        # pitch is the x axis rotation, roll is the y axis rotation
         if abs(current_rotation.pitch) > 10 or abs(current_rotation.roll) > 10:
             self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
 

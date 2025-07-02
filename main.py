@@ -120,7 +120,6 @@ def main(args):
                     more_distance = 0
                     first_iter = True
                     for anomaly_obj in anomalies:
-                        print(anomaly_obj.anomaly.get_transform().rotation)
                         # Get the distance vector between the ego vehicle and the anomaly
                         difference = ego_location - anomaly_obj.anomaly.get_transform().location
                         difference_vector = carla.Vector3D(difference.x, difference.y, difference.z)
@@ -139,11 +138,8 @@ def main(args):
                         print(f"Ego vehicle passed the furthest anomaly {more_distance_anomaly}, stopping simulation...")
                         break
 
-                    if args.anomaly_in_waypoint:
-                        # If the anomaly is in the waypoint of the ego vehicle, change the semantic tag of the anomaly
-                        # if it is in a distance of 2 meters from the ego vehicle
-                        for anomaly_obj in anomalies:
-                            anomaly_obj.handle_semantic_tag()
+                    for anomaly_obj in anomalies:
+                        anomaly_obj.handle_semantic_tag()
 
                 # Handle the sensors data
                 handle_sensor_data(args, run, sensors)
