@@ -552,7 +552,7 @@ def view_lidar(lidar_name):
     pcd = o3d.io.read_point_cloud("output/lidar/",lidar_name)
     o3d.visualization.draw_geometries([pcd])
 
-def spawn_anomaly(world,client,ego_vehicle,prop,anomaly_in_waypoint=True):
+def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,anomaly_in_waypoint=True):
     """Spawn an anomaly in the CARLA simulator.
     Args:
         world (carla.World): The CARLA world object.
@@ -560,12 +560,18 @@ def spawn_anomaly(world,client,ego_vehicle,prop,anomaly_in_waypoint=True):
         ego_vehicle (carla.Vehicle): The ego vehicle object.
     """
     # Get the unit vector of the vehicle's forward direction, this is used to spawn objects in front of the vehicle
+
     map:carla.Map = world.get_map()
     forward_vector = ego_vehicle.get_transform().rotation.get_forward_vector()
     right_vector = ego_vehicle.get_transform().rotation.get_right_vector()
     # Now add the distance to the vehicle's location to get the new location, the distance will be based on the vehicle's forward vector
     distance = random.randint(10,20)
-    right_left = random.randint(-6,6)
+    # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
+    if not is_dynamic:
+        right_left = random.randint(-6,6)
+    else:
+        # The dynamic anomalies are spawned on the right of the ego vehicle, pick a random from 4 to 6 meters
+        right_left = random.randint(4,6)
     distance_vector = right_left*right_vector + distance*forward_vector
     location = ego_vehicle.get_transform().location + distance_vector
     location.z = 0.1 # Set the z coordinate to 0 to spawn on the ground
@@ -578,13 +584,17 @@ def spawn_anomaly(world,client,ego_vehicle,prop,anomaly_in_waypoint=True):
     anomaly:carla.ActorBlueprint = anomalies[0]
 
     rotation = ego_vehicle.get_transform().rotation
-    rotation.yaw = random.randint(-180,180)
+    if not is_dynamic:
+        rotation.yaw = random.randint(-180,180)
+    else:
+        # The dynamic anomalies are spawned on the right of the ego vehicle, so we need to rotate them to face the vehicle
+        rotation.yaw += -90
 
     transform:carla.Transform = carla.Transform(location,rotation)
     if anomaly_in_waypoint:
         wp = map.get_waypoint(transform.location, project_to_road=True, lane_type=carla.LaneType.Sidewalk)
         transform.location = wp.transform.location
-        transform.location.z = 0.1
+        transform.location.z = 1
     anomaly_actor:carla.Actor = world.try_spawn_actor(anomaly, transform)
     if anomaly_actor is None:
         print(f"Failed to spawn {prop} anomaly.")
