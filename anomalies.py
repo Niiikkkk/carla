@@ -155,3 +155,23 @@ class WoodPalette_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+class Basketball_Bounce_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        return super().spawn_anomaly()
+
+class Football_Bounce_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        return super().spawn_anomaly()

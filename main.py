@@ -229,6 +229,10 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Tire_Anomaly(world, client, name, ego_vehicle)
     if name == "woodpalette":
         return WoodPalette_Anomaly(world, client, name, ego_vehicle)
+    if name == "basketball_bounce":
+        return Basketball_Bounce_Anomaly(world, client, name, ego_vehicle)
+    if name == "football_bounce":
+        return Football_Bounce_Anomaly(world, client, name, ego_vehicle)
     return None
 
 
