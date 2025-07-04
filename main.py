@@ -215,6 +215,20 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Person_Anomaly(world, client, name, ego_vehicle)
     if name == "tree":
         return Tree_Anomaly(world, client, name, ego_vehicle)
+    if name == "beerbottle":
+        return Beer_Anomaly(world, client, name, ego_vehicle)
+    if name == "football":
+        return Football_Anomaly(world, client, name, ego_vehicle)
+    if name == "ladder":
+        return Ladder_Anomaly(world, client, name, ego_vehicle)
+    if name == "mattress":
+        return Mattress_Anomaly(world, client, name, ego_vehicle)
+    if name == "skateboard":
+        return Skateboard_Anomaly(world, client, name, ego_vehicle)
+    if name == "tire":
+        return Tire_Anomaly(world, client, name, ego_vehicle)
+    if name == "woodpalette":
+        return WoodPalette_Anomaly(world, client, name, ego_vehicle)
     return None
 
 

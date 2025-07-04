@@ -552,7 +552,7 @@ def view_lidar(lidar_name):
     pcd = o3d.io.read_point_cloud("output/lidar/",lidar_name)
     o3d.visualization.draw_geometries([pcd])
 
-def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,anomaly_in_waypoint=True):
+def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,anomaly_in_waypoint=True):
     """Spawn an anomaly in the CARLA simulator.
     Args:
         world (carla.World): The CARLA world object.
@@ -565,7 +565,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,anomaly_
     forward_vector = ego_vehicle.get_transform().rotation.get_forward_vector()
     right_vector = ego_vehicle.get_transform().rotation.get_right_vector()
     # Now add the distance to the vehicle's location to get the new location, the distance will be based on the vehicle's forward vector
-    distance = random.randint(15,20)
+    distance = random.randint(10,20)
     # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
     if not is_dynamic:
         right_left = random.randint(-6,6)
@@ -577,7 +577,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,anomaly_
     if is_character:
         location.z = 1
     else:
-        location.z = 0.01 # Set the z coordinate to 0 to spawn on the ground
+        location.z = 0.5 # Set the z coordinate to 0 to spawn on the ground
 
     bp_lib:carla.BlueprintLibrary = world.get_blueprint_library()
     anomalies = bp_lib.filter(f"*{prop}")
@@ -586,9 +586,12 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,anomaly_
         return None
     anomaly:carla.ActorBlueprint = anomalies[0]
 
-    rotation = ego_vehicle.get_transform().rotation
+    rotation: carla.Rotation = ego_vehicle.get_transform().rotation
     if not is_dynamic:
         rotation.yaw = random.randint(-180,180)
+        if can_be_rotated:
+            rotation.roll = random.randint(-180,180)
+            rotation.pitch = random.randint(-180,180)
     else:
         # The dynamic anomalies are spawned on the right of the ego vehicle, so we need to rotate them to face the vehicle
         rotation.yaw += -90
