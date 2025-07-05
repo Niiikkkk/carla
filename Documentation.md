@@ -57,6 +57,8 @@ The main can be launched with this command: python main.py and there are several
 
 ### anomalies.py
 This file contains the definition of the anomalies that can be spawned in the simulation. Each anomaly is a class that inherits from `Anomaly`, which has a `spawn_anomaly()` method that spawns the anomaly in the world.
+The anomalies are spawned in front of the ego vehicle with a random distance in a range of 10 to 20 meters, and the `Static anomalies` such as Football, Basketbal and Baseball bat have also a random direction (left/right)
+in a range of -6 to 6 meters (with the ego vehicle in the center). The `Dynamic anomalies` such as Labrador, Person and Tree are spawned on the sidewalk, on the right of the ego vehicle.
 The anomalies have to impement the `handle_semantic_tag(self)` method:
 - `Labrador_Anomaly`: Spawns a Labrador dog in the world, that runs towards the ego vehicle in a random direction .
   - `handle_semantic_tag(self)` : Sets the semantic tag of the Labrador from `Animal` to `Anomaly` when the dog is getting close to the street.
