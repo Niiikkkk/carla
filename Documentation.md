@@ -59,39 +59,55 @@ The main can be launched with this command: python main.py and there are several
 This file contains the definition of the anomalies that can be spawned in the simulation. Each anomaly is a class that inherits from `Anomaly`, which has a `spawn_anomaly()` method that spawns the anomaly in the world.
 The anomalies are spawned in front of the ego vehicle with a random distance in a range of 10 to 20 meters, and the `Static anomalies` such as Football, Basketbal and Baseball bat have also a random direction (left/right)
 in a range of -6 to 6 meters (with the ego vehicle in the center). The `Dynamic anomalies` such as Labrador, Person and Tree are spawned on the sidewalk, on the right of the ego vehicle.
-The anomalies have to impement the `handle_semantic_tag(self)` method:
+The anomalies have to implement the `handle_semantic_tag(self)` method:
 - `Labrador_Anomaly`: Spawns a Labrador dog in the world, that runs towards the ego vehicle in a random direction .
   - `handle_semantic_tag(self)` : Sets the semantic tag of the Labrador from `Animal` to `Anomaly` when the dog is getting close to the street.
+  - <img src="Images/labrador.png">
 - `Baseballbat_Anomaly`: Spawns a baseball bat in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/baseballbat.png">
 - `Basketball_Anomaly`: Spawns a basketball in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/basketball.png">
 - `Person_Anomaly`: Spawns a person in the world, that starts running on the sidewalk and then runs towards the ego vehicle in a random direction.
   - `handle_semantic_tag(self)` : Sets the semantic tag of the person from `Pedestrian` to `Anomaly` when the person is getting close to the street.
+  - <img src="Images/person.png">
 - `Tree_Anomaly`: Spawns a tree in the world, that starts falling when the ego vehicle is close to it.
   - `handle_semantic_tag(self)` : Sets the semantic tag of the tree from `Vegetation` to `Anomaly` when the tree is falling.
+  - <img src="Images/tree.png">
 - `Beer_Anomaly`: Spawns a beer can in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/beerbottle.png">
 - `Football_Anomaly`: Spawns a football in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/football.png">
 - `Ladder_Anomaly`: Spawns a ladder in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/ladder.png">
 - `Mattress_Anomaly`: Spawns a mattress in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/mattress.png">
 - `Skateboard_Anomaly`: Spawns a skateboard in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/skateboard.png">
 - `Tire_Anomaly`: Spawns a tire in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/tire.png">
 - `WoodPalette_Anomaly`: Spawns a wooden palette in the world, that is placed on the ground, in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/woodpalette.png">
 - `Basketball_Bounce_Anomaly`: Spawns a basketball that bounces in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/basketball.png">
 - `Football_Bounce_Anomaly`: Spawns a football that bounces in front of the ego vehicle.
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/football.png">
 - `Streetlight_Anomaly`: Spawns a streetlight that is supposed to fall when the ego vehicle is close to it.
   - `handle_semantic_tag(self)` : Sets the semantic tag of the streetlight from `Nothing` to `Anomaly` when the streetlight is falling.
+  - <img src="Images/streetlight.png">
 
 ### sensors.py
 This file contains the definition of the sensors that can be spawned in the simulation. Each sensor is a class that inherits from `Sensor`, which has a `handle()` method that handles the data received from the sensor. 
-Sensor has the following attributes:
-
+The sensors are spawned in the world and attached to the ego vehicle:
+- `RGB_Sensor`: Spawns an RGB camera that captures the scene in front of the ego vehicle.
+  - `handle(self, data)`: Saves the image received from the camera to the `output/rgb` folder.
