@@ -553,7 +553,7 @@ def view_lidar(lidar_name):
     o3d.visualization.draw_geometries([pcd])
 
 def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,anomaly_in_waypoint=True):
-    """Spawn an anomaly in the CARLA simulator.
+    """Spawn an anomaly in the CARLA simulator. The anomaly will have the same rotation of the ego vehicle
     Args:
         world (carla.World): The CARLA world object.
         client (carla.Client): The CARLA client object.
@@ -592,9 +592,6 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         if can_be_rotated:
             rotation.roll = random.randint(-180,180)
             rotation.pitch = random.randint(-180,180)
-    else:
-        # The dynamic anomalies are spawned on the right of the ego vehicle, so we need to rotate them to face the vehicle
-        rotation.yaw += -90
 
     transform:carla.Transform = carla.Transform(location,rotation)
     if anomaly_in_waypoint:
