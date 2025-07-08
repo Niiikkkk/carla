@@ -158,7 +158,7 @@ class WoodPalette_Anomaly(Anomaly):
 
 class Basketball_Bounce_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -168,10 +168,23 @@ class Basketball_Bounce_Anomaly(Anomaly):
 
 class Football_Bounce_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
+
+    def spawn_anomaly(self):
+        return super().spawn_anomaly()
+
+class StreetLight_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+
+    def handle_semantic_tag(self):
+        current_rotation = self.anomaly.get_transform().rotation
+        # pitch is the x axis rotation, roll is the y axis rotation
+        if abs(current_rotation.pitch) > 10 or abs(current_rotation.roll) > 10:
+            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()

@@ -233,6 +233,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Basketball_Bounce_Anomaly(world, client, name, ego_vehicle)
     if name == "football_bounce":
         return Football_Bounce_Anomaly(world, client, name, ego_vehicle)
+    if name == "streetlight":
+        return StreetLight_Anomaly(world, client, name, ego_vehicle)
     return None
 
 
