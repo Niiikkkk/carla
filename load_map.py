@@ -9,7 +9,7 @@ images = []
 timestr = time.strftime("%Y%m%d-%H%M%S")
 
 # get all the images in the 'images for gif' folder
-for filename in sorted(glob.glob('output/semantic/converted/*.png')): # loop through all png files in the folder
+for filename in sorted(glob.glob('output/semantic/converted/trash*.png')): # loop through all png files in the folder
     im = Image.open(filename) # open the image
     im_small = im.resize((800, 600), resample=0) # resize them to make them a bit smaller
     images.append(im_small) # add the image to the list

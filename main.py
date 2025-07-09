@@ -23,8 +23,8 @@ def main(args):
         print("Activating hybrid mode")
         tm.set_hybrid_physics_mode(True)
         tm.set_hybrid_physics_radius(20)
-
-    set_sync_mode(world,client)
+    simulation_time_for_tick = 1/args.fps
+    set_sync_mode(world,client,simulation_time_for_tick)
 
     # Set the weather DOESN't WORK
     weather = carla.WeatherParameters(
@@ -88,7 +88,7 @@ def main(args):
 
             #With a for, it runs N times the simulation
             # 0.05 is the simulation run for each tick.
-            loops = args.run_time / 0.05
+            loops = args.run_time / simulation_time_for_tick
             for i in range(int(loops)):
                 world.tick()
 
@@ -235,6 +235,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Football_Bounce_Anomaly(world, client, name, ego_vehicle)
     if name == "streetlight":
         return StreetLight_Anomaly(world, client, name, ego_vehicle)
+    if name == "trashcan":
+        return TrashCan_Anomaly(world, client, name, ego_vehicle)
     return None
 
 
@@ -249,7 +251,8 @@ if __name__ == "__main__":
     parser.add_argument("--hybrid", action='store_true', help="Use hybrid physics mode")
     parser.add_argument("--image_size_x", type=str, help="Image size X", default='800')
     parser.add_argument("--image_size_y", type=str, help="Image size Y", default='600')
-    parser.add_argument('--sensor_tick', type=str, default='0.1', help='Sensor tick time in seconds')
+    parser.add_argument('--sensor_tick', type=str, default='0.1', help='Sensor tick time in seconds (This is the FPS of the sensors)')
+    parser.add_argument("--fps", type=int, help="FPS of the sensors", default=20)
     parser.add_argument("--rgb", action='store_true', help="Use RGB camera")
     parser.add_argument("--lidar", action='store_true', help="Use lidar sensor")
     parser.add_argument("--radar", action='store_true', help="Use radar sensor")

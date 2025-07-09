@@ -1,3 +1,4 @@
+from clean_up import world
 from utils import *
 
 class Anomaly:
@@ -184,6 +185,19 @@ class StreetLight_Anomaly(Anomaly):
         current_rotation = self.anomaly.get_transform().rotation
         # pitch is the x axis rotation, roll is the y axis rotation
         if abs(current_rotation.pitch) > 10 or abs(current_rotation.roll) > 10:
+            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+
+    def spawn_anomaly(self):
+        return super().spawn_anomaly()
+
+class TrashCan_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+
+    def handle_semantic_tag(self):
+        current_wp_loc = self.map.get_waypoint(self.anomaly.get_location(), project_to_road=True, lane_type=carla.LaneType.Sidewalk).transform.location
+        current_loc = self.anomaly.get_location()
+        if current_wp_loc.distance(current_loc) > 3:
             self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
 
     def spawn_anomaly(self):

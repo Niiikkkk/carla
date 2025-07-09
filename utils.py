@@ -8,13 +8,13 @@ import os
 import math
 from matplotlib import cm
 
-def set_sync_mode(world,client):
+def set_sync_mode(world,client,simulation_time_for_tick):
     """
     Set the world to synchronous mode.
     """
     settings = world.get_settings()
     settings.synchronous_mode = True
-    settings.fixed_delta_seconds = 0.05
+    settings.fixed_delta_seconds = simulation_time_for_tick
     world.apply_settings(settings)
     tm = client.get_trafficmanager()
     tm.set_synchronous_mode(True)
@@ -565,7 +565,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     forward_vector = ego_vehicle.get_transform().rotation.get_forward_vector()
     right_vector = ego_vehicle.get_transform().rotation.get_right_vector()
     # Now add the distance to the vehicle's location to get the new location, the distance will be based on the vehicle's forward vector
-    distance = random.randint(10,20)
+    distance = random.randint(11,20)
     # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
     if not is_dynamic:
         right_left = random.randint(-6,6)
@@ -577,7 +577,10 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     if is_character:
         location.z = 1
     else:
-        location.z = 0.5 # Set the z coordinate to 0 to spawn on the ground
+        if can_be_rotated:
+            location.z = 0.5
+        else:
+            location.z = 0.01 # Set the z coordinate to 0 to spawn on the ground
 
     bp_lib:carla.BlueprintLibrary = world.get_blueprint_library()
     anomalies = bp_lib.filter(f"*{prop}")
