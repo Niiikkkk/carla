@@ -103,8 +103,15 @@ The anomalies have to implement the `handle_semantic_tag(self)` method:
   - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
   - <img src="Images/football.png">
 - `Streetlight_Anomaly`: Spawns a streetlight that is supposed to fall when the ego vehicle is close to it.
+  - With this anomaly, the spawning is a bit different, as it is spawned as a replacement with an already existing streetlight in the world. All this modifications are done in the blueprint code.
+  The idea is to take a street light that is in front of the ego vehicle in a range of 10 meters to 30 meters, destroy it and replace it with a new streetlight that has the `Anomaly` semantic tag.
+  The streetlight to be removed is chosen between the ones that are in a angle of 30° in front of the ego vehicle.
+  Once the simulation ends, the original streetlight is restored.
+  Here's the screenshot of the blueprint part that handles the computation of the streetlight to replace:
+  <img src="Images/BP_Streetlight.png">
   - `handle_semantic_tag(self)` : Sets the semantic tag of the streetlight from `Nothing` to `Anomaly` when the streetlight is falling.
   - <img src="Images/streetlight.png">
+
 
 ### sensors.py
 This file contains the definition of the sensors that can be spawned in the simulation. Each sensor is a class that inherits from `Sensor`, which has a `handle()` method that handles the data received from the sensor. 
