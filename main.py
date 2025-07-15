@@ -237,6 +237,10 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return StreetLight_Anomaly(world, client, name, ego_vehicle)
     if name == "trashcan":
         return TrashCan_Anomaly(world, client, name, ego_vehicle)
+    if name == "trafficlight":
+        return TrafficLight_Anomaly(world, client, name, ego_vehicle)
+    if name == "flippedcar":
+        return FlippedCar_Anomaly(world, client, name, ego_vehicle)
     return None
 
 
