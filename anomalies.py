@@ -239,7 +239,7 @@ class FlippedCar_Anomaly(Anomaly):
         self.world.tick()
         # Set the semantic tag to Static_Anomaly
         anomaly.set_actor_semantic_tag("Static_Anomaly")
-        #Make the ego vehicle ignore the flipped car (It's going to crash on it)
+        #Make the ego vehicle ignore the flipped car (It's going to crash into it)
         tm:carla.TrafficManager = self.client.get_trafficmanager()
         tm.collision_detection(self.ego_vehicle, anomaly, False)
         return anomaly
