@@ -215,3 +215,31 @@ class TrafficLight_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+class FlippedCar_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        vehicle = random.choice(self.world.get_blueprint_library().filter("vehicle.*"))
+        self.name = vehicle.id
+        anomaly = super().spawn_anomaly()
+        #make it tick, otherwise the location is 0,0,0 (after the tick is updated). If we don't tick, the car will not be spawned correctly
+        self.world.tick()
+        loc = anomaly.get_location()
+        loc.z += 1.5  # Raise the car slightly above the ground
+        rot = anomaly.get_transform().rotation
+        # Flip the car
+        rot.yaw = random.randint(-180, 180)
+        rot.roll = 180
+        anomaly.set_transform(carla.Transform(loc,rot))
+        self.world.tick()
+        # Set the semantic tag to Static_Anomaly
+        anomaly.set_actor_semantic_tag("Static_Anomaly")
+        #Make the ego vehicle ignore the flipped car (It's going to crash on it)
+        tm:carla.TrafficManager = self.client.get_trafficmanager()
+        tm.collision_detection(self.ego_vehicle, anomaly, False)
+        return anomaly
