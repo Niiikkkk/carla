@@ -47,6 +47,8 @@ The main can be launched with this command: python main.py and there are several
 | --number_of_runs         | Number of runs to perform, each run is a simulation with the same parameters                                                                                                                          | 1             |
 | --run_time            | Time in seconds for each run, after this time the simulation stops                                                                                                                                    | 10            |
 | --anomalies | List of anomalies to spawn, separated by spaces                                                                                                                                                       | None          |   
+| --fps | The number of FPS the simulation should run at                                                                                                                                                        | 20            |
+| --sensor_tick | The time in seconds betweeen two sensor data captures. For example if we want to capture at 10 FPS, the sensor tick is 1 sec / 10 = 0.1. Note that this in uncorrelated to the FPS of the simulation  | 0.1           |
 #### Functions: 
 
 `handle_sensor_data(args, run, sensors)`, calls the handle method for each sensor spawned in the simulation, which is present in `sensors`
