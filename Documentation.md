@@ -128,6 +128,9 @@ will ignore the flipped car, so it won't stop and will crash into it if in the w
   - `handle_semantic_tag(self)` : Doesn't do anything, the semantic tag is `Anomaly` by default.
   - <img src="Images/flippedcar.png">
   - NOTE: The image is just for illustration, any vehicle can be used.
+- `InstantCarBreak_Anomaly`: Spawns a car that stops instantly in front of the ego vehicle. Everything is done in python. First a vehicle in front
+of the ego vehicle is chosen and if present, the vehicle is stopped.
+  - `handle_semantic_tag(self)` : If a certain time has passed, the vehicle is stopped and set to `Anomaly` semantic tag.
 
 ### sensors.py
 This file contains the definition of the sensors that can be spawned in the simulation. Each sensor is a class that inherits from `Sensor`, which has a `handle()` method that handles the data received from the sensor. 
