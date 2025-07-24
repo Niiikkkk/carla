@@ -110,6 +110,7 @@ def spawn_ego_vehicle(world,client,args):
     blueprint_library = world.get_blueprint_library()
 
     # Get the vehicle blueprints and spawn points
+    print(blueprint_library.filter("vehicle.ue4.*"))
     vehicle_blueprints = blueprint_library.filter("*mustang*")
     spawn_points = world.get_map().get_spawn_points()
     # Choose a random vehicle blueprint and spawn point
@@ -142,6 +143,9 @@ def generate_traffic(args,world,client):
     batch = []
     for i in range(number_of_vehicles):
         vehicle_bp = random.choice(bp_vehicles)
+        while vehicle_bp.id == "vehicle.nissan.patrol":
+            # Nissan Patrol we skip it
+            vehicle_bp = random.choice(bp_vehicles)
         vehicle_bp.set_attribute('role_name', 'autopilot')
         # SpawnActor is used to spawn the actor, .then is used to give it a command after spwawning the actor. FutureActor is used to get the actor that was just spawned.
         batch.append(carla.command.SpawnActor(vehicle_bp, spawn_points[i]))
@@ -149,7 +153,7 @@ def generate_traffic(args,world,client):
     res = client.apply_batch_sync(batch,True)
     for response in res:
         if response.error:
-            print(response.error)
+            print("Generate Traffic: ", response.error)
         else:
             vehicle_list.append(response.actor_id)
     return vehicle_list
@@ -552,7 +556,7 @@ def view_lidar(lidar_name):
     pcd = o3d.io.read_point_cloud("output/lidar/",lidar_name)
     o3d.visualization.draw_geometries([pcd])
 
-def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,anomaly_in_waypoint=True):
+def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,anomaly_in_waypoint=True,spawn_at_zero=False):
     """Spawn an anomaly in the CARLA simulator. The anomaly will have the same rotation of the ego vehicle
     Args:
         world (carla.World): The CARLA world object.
@@ -574,6 +578,8 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         right_left = random.randint(4,6)
     distance_vector = right_left*right_vector + distance*forward_vector
     location = ego_vehicle.get_transform().location + distance_vector
+    if spawn_at_zero:
+        location = carla.Location(x=0,y=0,z=0)
     if is_character:
         location.z = 1
     else:

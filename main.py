@@ -91,6 +91,9 @@ def main(args):
             loops = args.run_time / simulation_time_for_tick
             for i in range(int(loops)):
                 world.tick()
+                if args.anomalies:
+                    for anomaly_obj in anomalies:
+                        anomaly_obj.tick += 1
 
                 # If the ego vehicle pass the anomaly, break the loop. I compute this in this way:
                 # - Get the vector of the difference of the locations
@@ -241,6 +244,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return TrafficLight_Anomaly(world, client, name, ego_vehicle)
     if name == "flippedcar":
         return FlippedCar_Anomaly(world, client, name, ego_vehicle)
+    if name == "instantcarbreak":
+        return InstantCarBreak_Anomaly(world, client, name, ego_vehicle)
     return None
 
 
@@ -256,7 +261,7 @@ if __name__ == "__main__":
     parser.add_argument("--image_size_x", type=str, help="Image size X", default='800')
     parser.add_argument("--image_size_y", type=str, help="Image size Y", default='600')
     parser.add_argument('--sensor_tick', type=str, default='0.1', help='Sensor tick time in seconds (This is the FPS of the sensors)')
-    parser.add_argument("--fps", type=int, help="FPS of the sensors", default=20)
+    parser.add_argument("--fps", type=int, help="FPS the simulation should run at", default=20)
     parser.add_argument("--rgb", action='store_true', help="Use RGB camera")
     parser.add_argument("--lidar", action='store_true', help="Use lidar sensor")
     parser.add_argument("--radar", action='store_true', help="Use radar sensor")
@@ -270,10 +275,6 @@ if __name__ == "__main__":
     parser.add_argument("--sun_altitude_angle", type=float, help="Use sun altitude angle (Day/Night)", default=0.0)
     parser.add_argument("--fog_density", type=float, help="Use fog density", default=0.0)
     parser.add_argument("--fog_distance", type=float, help="Use fog distance", default=0.0)
-    parser.add_argument("--anomaly_distance", type=int, help="Location of the anomaly", default=10)
-    parser.add_argument("--anomaly_location", type=str, help="Location of the anomaly", default="front")
-    parser.add_argument("--anomaly_direction", type=str, help="Direction of the anomaly", default="forward")
-    parser.add_argument("--anomaly_in_waypoint", action='store_true', help="Spawn the anomaly in the waypoint of the ego vehicle")
     parser.add_argument("--number_of_runs", type=int, help="Number of runs", default=1)
     parser.add_argument("--run_time", type=int, help="Run time in seconds", default=10)
     parser.add_argument("--anomalies", nargs="+", type=str, help="List of anomalies to spawn", default=None)

@@ -1,8 +1,11 @@
+import sys
+import time
+
 from clean_up import world
 from utils import *
 
 class Anomaly:
-    def __init__(self, world: carla.World, client: carla.Client, name ,ego_vehicle, is_dynamic, is_character, can_be_rotated, anomaly_in_waypoint):
+    def __init__(self, world: carla.World, client: carla.Client, name ,ego_vehicle:carla.Actor, is_dynamic, is_character, can_be_rotated, anomaly_in_waypoint, spawn_at_zero=False):
         self.world = world
         self.client = client
         self.ego_vehicle = ego_vehicle
@@ -12,11 +15,13 @@ class Anomaly:
         self.is_dynamic = is_dynamic
         self.is_character = is_character
         self.can_be_rotated = can_be_rotated
+        self.spawn_at_zero = spawn_at_zero
         self.anomaly: carla.Actor = None
+        self.tick = 0
 
     def spawn_anomaly(self):
         print("Spawning anomaly...", self.name)
-        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.is_dynamic, self.is_character, self.can_be_rotated, self.anomaly_in_waypoint)
+        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.is_dynamic, self.is_character, self.can_be_rotated, self.anomaly_in_waypoint, self.spawn_at_zero)
         self.anomaly = anomaly
         if self.anomaly:
             print("Anomaly Spawned!")
@@ -243,3 +248,54 @@ class FlippedCar_Anomaly(Anomaly):
         tm:carla.TrafficManager = self.client.get_trafficmanager()
         tm.collision_detection(self.ego_vehicle, anomaly, False)
         return anomaly
+
+class InstantCarBreak_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        # Spawn this at zero, then if in front of the ego vehicle there's a car, it will be attached to this car, so it'll have it's location
+        # (This is done at the blueprint level)
+        self.parent = None
+        self.tm:carla.TrafficManager = client.get_trafficmanager()
+        self.first_run = True
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
+
+    def handle_semantic_tag(self):
+        # Make the vehicle break after 40 ticks
+        if self.first_run and self.tick>=40:
+            self.parent.set_autopilot(False)
+            self.parent.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
+            self.parent.set_actor_semantic_tag("Static_Anomaly")
+            self.first_run = False
+
+    def spawn_anomaly(self):
+        print("InstantCarBreak -> Spawning InstantCarBreak anomaly...")
+        actors:carla.ActorList = self.world.get_actors()
+        vehicles:carla.ActorList = actors.filter("vehicle.*")
+        ego_fw = self.ego_vehicle.get_transform().get_forward_vector()
+        ego_loc = self.ego_vehicle.get_transform().location
+        vehicle_to_attach = None
+        for vehicle in vehicles:
+            if vehicle.id != self.ego_vehicle.id:
+                dst:carla.Location = vehicle.get_transform().location - ego_loc
+                # We have the distance vector and the forward vector of the ego vehicle. The dot product will tell us if the vehicle is in front of the ego vehicle
+                # 0.95 is something like 15°
+                if ego_fw.dot(dst.make_unit_vector()) > 0.95:
+                    #If the vehicle is in front of the ego vehicle, we want to check the distance, say between 10 and 20 meters
+                    if 10 < dst.length() < 20:
+                        # We want to attach the anomaly to this vehicle
+                        vehicle_to_attach = vehicle
+                        break
+        if vehicle_to_attach is None:
+            print("InstantCarBreak -> No vehicle found in front of the ego vehicle to attach the anomaly to.")
+            return None
+        else:
+            print("InstantCarBreak -> Found vehicle to attach the anomaly to:", vehicle_to_attach)
+        bp_lib: carla.BlueprintLibrary = world.get_blueprint_library()
+        anomaly_to_spawn = bp_lib.filter(f"*{self.name}")[0]
+        transform = carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0))
+        transform.location.z = 1
+        self.anomaly:carla.Actor = world.spawn_actor(anomaly_to_spawn, transform, attach_to=vehicle_to_attach, attachment_type=carla.AttachmentType.Rigid)
+        if self.anomaly is None:
+            print("InstantCarBreak -> Failed to spawn anomaly:", self.name)
+            return None
+        self.parent = self.anomaly.parent
+        return self.anomaly
