@@ -67,10 +67,12 @@ def main(args):
                     anomaly_object = generate_anomaly_object(world, client, ego_vehicle, str_anomaly)
                     anomaly: carla.Actor = anomaly_object.spawn_anomaly()
                     if anomaly is None:
-                        raise Exception("Anomaly not spawned")
+                        print(str_anomaly + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
                     if anomaly is not None:
                         world.tick()
                         anomalies.append(anomaly_object)
+                if len(anomalies) == 0:
+                    raise Exception("No anomalies spawned, exiting...")
 
             # Setup the collision sensor, only if some anomalies are present
             if args.anomalies:
@@ -246,6 +248,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return FlippedCar_Anomaly(world, client, name, ego_vehicle)
     if name == "instantcarbreak":
         return InstantCarBreak_Anomaly(world, client, name, ego_vehicle)
+    if name == "trafficlightoff":
+        return TrafficLightOff_Anomaly(world, client, name, ego_vehicle)
     return None
 
 

@@ -30,6 +30,25 @@ class Anomaly:
     def handle_semantic_tag(self):
         raise NotImplementedError("This method should be overridden by subclasses")
 
+    def find_obj_in_front_ego_vehicle(self, filter_string: str, min_distance: float = 10, max_distance: float = 20):
+        actors: carla.ActorList = self.world.get_actors()
+        actors_filtered: carla.ActorList = actors.filter(filter_string)
+        ego_fw = self.ego_vehicle.get_transform().get_forward_vector()
+        ego_loc = self.ego_vehicle.get_transform().location
+        parent = None
+        for actor in actors_filtered:
+            if actor.id != self.ego_vehicle.id:
+                dst: carla.Location = actor.get_transform().location - ego_loc
+                # We have the distance vector and the forward vector of the ego vehicle. The dot product will tell us if the vehicle is in front of the ego vehicle
+                # 0.95 is something like 15°
+                if ego_fw.dot(dst.make_unit_vector()) > 0.95:
+                    # If the vehicle is in front of the ego vehicle, we want to check the distance, say between 10 and 20 meters
+                    if min_distance < dst.length() < max_distance:
+                        # We want to attach the anomaly to this vehicle
+                        parent = actor
+                        break
+        return parent
+
 class Labrador_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, True, True, False, True)
@@ -268,22 +287,7 @@ class InstantCarBreak_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         print("InstantCarBreak -> Spawning InstantCarBreak anomaly...")
-        actors:carla.ActorList = self.world.get_actors()
-        vehicles:carla.ActorList = actors.filter("vehicle.*")
-        ego_fw = self.ego_vehicle.get_transform().get_forward_vector()
-        ego_loc = self.ego_vehicle.get_transform().location
-        vehicle_to_attach = None
-        for vehicle in vehicles:
-            if vehicle.id != self.ego_vehicle.id:
-                dst:carla.Location = vehicle.get_transform().location - ego_loc
-                # We have the distance vector and the forward vector of the ego vehicle. The dot product will tell us if the vehicle is in front of the ego vehicle
-                # 0.95 is something like 15°
-                if ego_fw.dot(dst.make_unit_vector()) > 0.95:
-                    #If the vehicle is in front of the ego vehicle, we want to check the distance, say between 10 and 20 meters
-                    if 10 < dst.length() < 20:
-                        # We want to attach the anomaly to this vehicle
-                        vehicle_to_attach = vehicle
-                        break
+        vehicle_to_attach = self.find_obj_in_front_ego_vehicle("vehicle.*", min_distance=10, max_distance=20)
         if vehicle_to_attach is None:
             print("InstantCarBreak -> No vehicle found in front of the ego vehicle to attach the anomaly to.")
             return None
@@ -299,3 +303,23 @@ class InstantCarBreak_Anomaly(Anomaly):
             return None
         self.parent = self.anomaly.parent
         return self.anomaly
+
+
+class TrafficLightOff_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
+
+    def handle_semantic_tag(self):
+        # If the traffic light is off, we want to set the semantic tag to Dynamic_Anomaly
+        if self.anomaly.get_light_state() == carla.TrafficLightState.Off:
+            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+
+    def spawn_anomaly(self):
+        print("TrafficLightOff -> Spawning TrafficLightOff anomaly...")
+        traffic_light = self.find_obj_in_front_ego_vehicle("traffic_light.*", min_distance=10, max_distance=30)
+        if traffic_light is None:
+            print("TrafficLightOff -> No traffic light found in front of the ego vehicle to attach the anomaly to.")
+            return None
+        else:
+            print("TrafficLightOff -> Found traffic light to attach the anomaly to:", traffic_light)
+        return None
