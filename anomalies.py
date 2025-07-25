@@ -370,9 +370,11 @@ class TrafficLightOff_Anomaly(Anomaly):
 
     def handle_semantic_tag(self):
         # If the traffic light is off, we want to set the semantic tag to Static_Anomaly
+        print(self.ego_vehicle.get_traffic_light_state())
         if self.first_run and self.tick>=20:
             parent: carla.TrafficLight = self.anomaly.parent
             parent.set_state(carla.TrafficLightState.Off)
+            self.anomaly.parent.freeze(True)
             parent.set_actor_semantic_tag("Static_Anomaly")
             self.first_run = False
 
@@ -395,4 +397,6 @@ class TrafficLightOff_Anomaly(Anomaly):
 
     def on_destroy(self):
         super().on_destroy()
+        self.anomaly.parent.freeze(False)
+        self.anomaly.parent.reset_group()
         self.anomaly.parent.retag_actor()
