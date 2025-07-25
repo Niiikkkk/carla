@@ -8,6 +8,8 @@ Here’s how it works.
 2. This calls SetActorSemanticTag() placed in Simulator.h, which has a reference to a Client instance, and uses it to call SetActorSemanticTag() placed in Client.cpp
 3. The Client is used to communicate with the server through some “messages", in this case the Client sends a message containing: set_actor_semantic_tag, the actor ID and the new Tag.
 4. The Server (CarlaServer.cpp) has a binding between the message set_actor_semantic_tag and a function that calls SetSemanticTag placed in CarlaActor.cpp, which call SetActorTag in Tagger.cpp 
+### Add a new python API function to retag the actor to the original semantic tag(s)
+Same as above, but the CarlaServer.cpp calls direction ATagger::TagActor()
 ### Adding a new semantic tag
 Work flow (the first four steps are the explained in the documentation https://carla.readthedocs.io/en/latest/tuto_D_create_semantic_tags/#1-create-the-tag-id):
 1. Add the tag to ObjectLabel.h 
@@ -132,7 +134,8 @@ will ignore the flipped car, so it won't stop and will crash into it if in the w
 of the ego vehicle is chosen and if present, the vehicle is stopped.
   - `handle_semantic_tag(self)` : If a certain time has passed, the vehicle is stopped and set to `Anomaly` semantic tag.
 - `TrafficLightOff_Anomaly`: If there is a traffic light in front of the ego vehicle, it is turned off.
-  - `handle_semantic_tag(self)` : Sets the semantic tag of the traffic light from `TrafficLight` to `Anomaly` when the traffic light is turned off.
+  - `handle_semantic_tag(self)` : Sets the semantic tag of the traffic light from `TrafficLight` to `Anomaly` when the traffic light is turned off. Note
+  that if a vehicle cross the intersection when the traffic light is turned off, it will not stop, so it is also marked as `Anomaly`.
   - <img src="Images/trafficlight.png">
 
 ### sensors.py
