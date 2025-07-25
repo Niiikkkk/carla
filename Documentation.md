@@ -131,6 +131,9 @@ will ignore the flipped car, so it won't stop and will crash into it if in the w
 - `InstantCarBreak_Anomaly`: Spawns a car that stops instantly in front of the ego vehicle. Everything is done in python. First a vehicle in front
 of the ego vehicle is chosen and if present, the vehicle is stopped.
   - `handle_semantic_tag(self)` : If a certain time has passed, the vehicle is stopped and set to `Anomaly` semantic tag.
+- `TrafficLightOff_Anomaly`: If there is a traffic light in front of the ego vehicle, it is turned off.
+  - `handle_semantic_tag(self)` : Sets the semantic tag of the traffic light from `TrafficLight` to `Anomaly` when the traffic light is turned off.
+  - <img src="Images/trafficlight.png">
 
 ### sensors.py
 This file contains the definition of the sensors that can be spawned in the simulation. Each sensor is a class that inherits from `Sensor`, which has a `handle()` method that handles the data received from the sensor. 

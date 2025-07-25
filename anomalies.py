@@ -30,7 +30,7 @@ class Anomaly:
     def handle_semantic_tag(self):
         raise NotImplementedError("This method should be overridden by subclasses")
 
-    def find_obj_in_front_ego_vehicle(self, filter_string: str, min_distance: float = 10, max_distance: float = 20):
+    def find_obj_in_front_ego_vehicle(self, filter_string: str, min_distance: float = 10, max_distance: float = 20, angle: float = 0.95):
         actors: carla.ActorList = self.world.get_actors()
         actors_filtered: carla.ActorList = actors.filter(filter_string)
         ego_fw = self.ego_vehicle.get_transform().get_forward_vector()
@@ -41,13 +41,16 @@ class Anomaly:
                 dst: carla.Location = actor.get_transform().location - ego_loc
                 # We have the distance vector and the forward vector of the ego vehicle. The dot product will tell us if the vehicle is in front of the ego vehicle
                 # 0.95 is something like 15°
-                if ego_fw.dot(dst.make_unit_vector()) > 0.95:
+                if ego_fw.dot(dst.make_unit_vector()) > angle:
                     # If the vehicle is in front of the ego vehicle, we want to check the distance, say between 10 and 20 meters
                     if min_distance < dst.length() < max_distance:
                         # We want to attach the anomaly to this vehicle
                         parent = actor
                         break
         return parent
+
+    def on_destroy(self):
+        print(self.name + " -> Destroying anomaly...")
 
 class Labrador_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -63,6 +66,9 @@ class Labrador_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class Baseballbat_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, False, False, False, False)
@@ -73,6 +79,9 @@ class Baseballbat_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class Basketball_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, False, False, True, False)
@@ -82,6 +91,9 @@ class Basketball_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
 
 class Person_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -95,6 +107,9 @@ class Person_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
 
 class Tree_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -111,6 +126,9 @@ class Tree_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class Beer_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, False, False, True, False)
@@ -120,6 +138,9 @@ class Beer_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
 
 class Football_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -131,6 +152,9 @@ class Football_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class Ladder_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, False, False, False,False)
@@ -140,6 +164,9 @@ class Ladder_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
 
 class Mattress_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -151,6 +178,9 @@ class Mattress_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class Skateboard_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, False, False, True, False)
@@ -160,6 +190,9 @@ class Skateboard_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
 
 class Tire_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -171,6 +204,9 @@ class Tire_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class WoodPalette_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, False, False, False,False)
@@ -180,6 +216,9 @@ class WoodPalette_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
 
 class Basketball_Bounce_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -191,6 +230,9 @@ class Basketball_Bounce_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class Football_Bounce_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, False, False, False, False)
@@ -200,6 +242,9 @@ class Football_Bounce_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
 
 class StreetLight_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -214,6 +259,9 @@ class StreetLight_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class TrashCan_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, True, False, False, True)
@@ -227,6 +275,9 @@ class TrashCan_Anomaly(Anomaly):
     def spawn_anomaly(self):
         return super().spawn_anomaly()
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class TrafficLight_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, True, False, False, True)
@@ -239,6 +290,9 @@ class TrafficLight_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
 
 class FlippedCar_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -268,6 +322,9 @@ class FlippedCar_Anomaly(Anomaly):
         tm.collision_detection(self.ego_vehicle, anomaly, False)
         return anomaly
 
+    def on_destroy(self):
+        super().on_destroy()
+
 class InstantCarBreak_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         # Spawn this at zero, then if in front of the ego vehicle there's a car, it will be attached to this car, so it'll have it's location
@@ -296,7 +353,6 @@ class InstantCarBreak_Anomaly(Anomaly):
         bp_lib: carla.BlueprintLibrary = world.get_blueprint_library()
         anomaly_to_spawn = bp_lib.filter(f"*{self.name}")[0]
         transform = carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0))
-        transform.location.z = 1
         self.anomaly:carla.Actor = world.spawn_actor(anomaly_to_spawn, transform, attach_to=vehicle_to_attach, attachment_type=carla.AttachmentType.Rigid)
         if self.anomaly is None:
             print("InstantCarBreak -> Failed to spawn anomaly:", self.name)
@@ -304,22 +360,39 @@ class InstantCarBreak_Anomaly(Anomaly):
         self.parent = self.anomaly.parent
         return self.anomaly
 
+    def on_destroy(self):
+        super().on_destroy()
 
 class TrafficLightOff_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        self.first_run = True
         super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
-        # If the traffic light is off, we want to set the semantic tag to Dynamic_Anomaly
-        if self.anomaly.get_light_state() == carla.TrafficLightState.Off:
-            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+        # If the traffic light is off, we want to set the semantic tag to Static_Anomaly
+        if self.first_run and self.tick>=20:
+            parent: carla.TrafficLight = self.anomaly.parent
+            parent.set_state(carla.TrafficLightState.Off)
+            parent.set_actor_semantic_tag("Static_Anomaly")
+            self.first_run = False
 
     def spawn_anomaly(self):
         print("TrafficLightOff -> Spawning TrafficLightOff anomaly...")
-        traffic_light = self.find_obj_in_front_ego_vehicle("traffic_light.*", min_distance=10, max_distance=30)
+        traffic_light = self.find_obj_in_front_ego_vehicle("traffic.traffic_light", min_distance=10, max_distance=50, angle=0.99)
         if traffic_light is None:
             print("TrafficLightOff -> No traffic light found in front of the ego vehicle to attach the anomaly to.")
             return None
         else:
             print("TrafficLightOff -> Found traffic light to attach the anomaly to:", traffic_light)
-        return None
+        bp_lib = self.world.get_blueprint_library()
+        anomaly_to_spawn = bp_lib.filter(f"*{self.name}")[0]
+        transform = carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0))
+        self.anomaly = self.world.spawn_actor(anomaly_to_spawn, transform, attach_to=traffic_light, attachment_type=carla.AttachmentType.Rigid)
+        if self.anomaly is None:
+            print("TrafficLightOff -> Failed to spawn anomaly:", self.name)
+            return None
+        return self.anomaly
+
+    def on_destroy(self):
+        super().on_destroy()
+        self.anomaly.parent.retag_actor()

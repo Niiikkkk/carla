@@ -155,6 +155,10 @@ def main(args):
             print(f"An error occurred: {e}")
             print("Simulation failed. Interrupting...")
         finally:
+            # Handle the anomalies
+            if args.anomalies:
+                for anomaly_obj in anomalies:
+                    anomaly_obj.on_destroy()
             clean_up(args,world,client,tm,sensors)
             print("End of simulation")
 
@@ -250,6 +254,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return InstantCarBreak_Anomaly(world, client, name, ego_vehicle)
     if name == "trafficlightoff":
         return TrafficLightOff_Anomaly(world, client, name, ego_vehicle)
+
+    print("Anomaly " + name + " not found, returning None")
     return None
 
 

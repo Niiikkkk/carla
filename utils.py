@@ -110,7 +110,6 @@ def spawn_ego_vehicle(world,client,args):
     blueprint_library = world.get_blueprint_library()
 
     # Get the vehicle blueprints and spawn points
-    print(blueprint_library.filter("vehicle.ue4.*"))
     vehicle_blueprints = blueprint_library.filter("*mustang*")
     spawn_points = world.get_map().get_spawn_points()
     # Choose a random vehicle blueprint and spawn point
