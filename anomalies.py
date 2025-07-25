@@ -49,6 +49,24 @@ class Anomaly:
                         break
         return parent
 
+    def find_objs_in_front_ego_vehicle(self, filter_string: str, min_distance: float = 10, max_distance: float = 20, angle: float = 0.95):
+        actors: carla.ActorList = self.world.get_actors()
+        actors_filtered: carla.ActorList = actors.filter(filter_string)
+        ego_fw = self.ego_vehicle.get_transform().get_forward_vector()
+        ego_loc = self.ego_vehicle.get_transform().location
+        parents = []
+        for actor in actors_filtered:
+            if actor.id != self.ego_vehicle.id:
+                dst: carla.Location = actor.get_transform().location - ego_loc
+                # We have the distance vector and the forward vector of the ego vehicle. The dot product will tell us if the vehicle is in front of the ego vehicle
+                # 0.95 is something like 15°
+                if ego_fw.dot(dst.make_unit_vector()) > angle:
+                    # If the vehicle is in front of the ego vehicle, we want to check the distance, say between 10 and 20 meters
+                    if min_distance < dst.length() < max_distance:
+                        # We want to attach the anomaly to this vehicle
+                        parents.append(actor)
+        return parents
+
     def on_destroy(self):
         print(self.name + " -> Destroying anomaly...")
 
@@ -370,17 +388,20 @@ class TrafficLightOff_Anomaly(Anomaly):
 
     def handle_semantic_tag(self):
         # If the traffic light is off, we want to set the semantic tag to Static_Anomaly
-        print(self.ego_vehicle.get_traffic_light_state())
         if self.first_run and self.tick>=20:
             parent: carla.TrafficLight = self.anomaly.parent
             parent.set_state(carla.TrafficLightState.Off)
             self.anomaly.parent.freeze(True)
             parent.set_actor_semantic_tag("Static_Anomaly")
             self.first_run = False
-
+        vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=10, max_distance=30, angle=0.75)
+        if len(vehicles) != 0:
+            for vehicle in vehicles:
+                if vehicle.get_control().throttle > 0 and not vehicle.is_at_traffic_light():
+                    vehicle.set_actor_semantic_tag("Dynamic_Anomaly")
     def spawn_anomaly(self):
         print("TrafficLightOff -> Spawning TrafficLightOff anomaly...")
-        traffic_light = self.find_obj_in_front_ego_vehicle("traffic.traffic_light", min_distance=10, max_distance=50, angle=0.99)
+        traffic_light = self.find_obj_in_front_ego_vehicle("traffic.traffic_light", min_distance=10, max_distance=50, angle=0.95)
         if traffic_light is None:
             print("TrafficLightOff -> No traffic light found in front of the ego vehicle to attach the anomaly to.")
             return None

@@ -254,7 +254,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return InstantCarBreak_Anomaly(world, client, name, ego_vehicle)
     if name == "trafficlightoff":
         return TrafficLightOff_Anomaly(world, client, name, ego_vehicle)
-
+    if name == "carthroughtrafficlightoff":
+        return CarThroughTrafficLightOff_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

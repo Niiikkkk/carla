@@ -75,9 +75,9 @@ def clean_up(args,world,client,tm,sensors):
     """
     print("Cleaning Simulation...")
     destroy_all_sensors(world, client, sensors)
+    destroy_all_anomalies(world, client)
     destroy_all_vehicles(world, client)
     destroy_all_pedestrians(world, client)
-    destroy_all_anomalies(world, client)
     set_async_mode(world, client)
     if args.hybrid:
         print("Deactivating hybrid mode")
