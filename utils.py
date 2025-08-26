@@ -267,9 +267,14 @@ def attach_lidar(args,world,client,ego_vehicle):
     lidar_bp = world.get_blueprint_library().find("sensor.lidar.ray_cast")
 
     # Meters of range
-    lidar_bp.set_attribute("range", '50')
+    lidar_bp.set_attribute("range", '100')
     # Rotation frequency should be equal to FPS in order to do a 360 ° rotation
-    lidar_bp.set_attribute("rotation_frequency", '20')
+    #NO NOISE
+    lidar_bp.set_attribute('dropoff_general_rate', '0.0')
+    lidar_bp.set_attribute('dropoff_intensity_limit', '1.0')
+    lidar_bp.set_attribute('dropoff_zero_intensity', '0.0')
+    #NO NOISE
+    lidar_bp.set_attribute("rotation_frequency", str(args.fps))
     # Number of lasers
     lidar_bp.set_attribute("channels", '64')
     lidar_bp.set_attribute("upper_fov", '15')
@@ -330,9 +335,10 @@ def attach_semantic_lidar(args, world,client,ego_vehicle):
     # Get the blueprint library
     semantic_lidar_bp = world.get_blueprint_library().find("sensor.lidar.ray_cast_semantic")
     # Meters of range
-    semantic_lidar_bp.set_attribute("range", '50')
+    semantic_lidar_bp.set_attribute("range", '100')
     # Rotation frequency should be equal to FPS in order to do a 360 ° rotation
-    semantic_lidar_bp.set_attribute("rotation_frequency", '20')
+
+    semantic_lidar_bp.set_attribute("rotation_frequency", str(args.fps))
     # Number of lasers
     semantic_lidar_bp.set_attribute("channels", '64')
     semantic_lidar_bp.set_attribute("upper_fov", '15')
