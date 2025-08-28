@@ -1,4 +1,5 @@
 import argparse
+from typing import Union
 
 from anomalies import Anomaly
 from utils import *
@@ -49,9 +50,9 @@ def main(args):
             anomalies = []
             all_vehicles = []
             sensors = []
-            ego_vehicle:carla.Actor = spawn_ego_vehicle(world, client, args)
+            ego_vehicle: carla.Actor = spawn_ego_vehicle(world, client, args)
             if ego_vehicle is None:
-                raise Exception("Ego vehicle not spawned")
+                raise Exception("Ego vehicle not spawned, exiting...")
 
             all_vehicles.append(ego_vehicle.id)
 
@@ -254,8 +255,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return InstantCarBreak_Anomaly(world, client, name, ego_vehicle)
     if name == "trafficlightoff":
         return TrafficLightOff_Anomaly(world, client, name, ego_vehicle)
-    if name == "carthroughtrafficlightoff":
-        return CarThroughTrafficLightOff_Anomaly(world, client, name, ego_vehicle)
+    if name == "carthroughredlight":
+        return CarThroughRedLight_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
