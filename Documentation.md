@@ -137,6 +137,9 @@ of the ego vehicle is chosen and if present, the vehicle is stopped.
   - `handle_semantic_tag(self)` : Sets the semantic tag of the traffic light from `TrafficLight` to `Anomaly` when the traffic light is turned off. Note
   that if a vehicle cross the intersection when the traffic light is turned off, it will not stop, so it is also marked as `Anomaly`.
   - <img src="Images/trafficlight.png">
+- `CarThroughRedLight_Anomaly`: If there is a traffic light group in front of the ego vehicle, make the traffic light in front of the ego vehicle green and all the other red. Then select one among the 
+red traffic light and take the first vehicle that is waiting and make it cross the intersection.
+  - `handle_semantic_tag(self)` : Sets the semantic tag of the vehicle that crosses the intersection from `Vehicle` to `Anomaly`.
 
 ### sensors.py
 This file contains the definition of the sensors that can be spawned in the simulation. Each sensor is a class that inherits from `Sensor`, which has a `handle()` method that handles the data received from the sensor. 
