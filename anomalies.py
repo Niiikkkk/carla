@@ -384,21 +384,16 @@ class InstantCarBreak_Anomaly(Anomaly):
 
 class TrafficLightOff_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        self.first_run = True
+        self.traffic_light = None
+        self.vehicles = None
         super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         # If the traffic light is off, we want to set the semantic tag to Static_Anomaly
-        if self.first_run and self.tick>=20:
-            parent: carla.TrafficLight = self.anomaly.parent
-            parent.set_state(carla.TrafficLightState.Off)
-            self.anomaly.parent.freeze(True)
-            parent.set_actor_semantic_tag("Static_Anomaly")
-            self.first_run = False
-        vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=10, max_distance=30, angle=0.75)
-        if len(vehicles) != 0:
-            for vehicle in vehicles:
-                if vehicle.get_control().throttle > 0 and not vehicle.is_at_traffic_light():
+        if len(self.vehicles) != 0:
+            wps = self.traffic_light.get_stop_waypoints()
+            for vehicle in self.vehicles:
+                if (vehicle.get_transform().location - wps[0].transform.location).dot(wps[0].transform.get_forward_vector()) >3:
                     vehicle.set_actor_semantic_tag("Dynamic_Anomaly")
 
     def spawn_anomaly(self):
@@ -409,10 +404,60 @@ class TrafficLightOff_Anomaly(Anomaly):
             return None
         else:
             print("TrafficLightOff -> Found traffic light to attach the anomaly to:", traffic_light)
+        traffic_light_group = traffic_light.get_group_traffic_lights()
+
+        # Sort the traffic lights by distance to the ego vehicle. So the first one will be the closest one (i.e. my traffic light)
+        # Then make my traffic light green and the others red
+        traffic_light_group.sort(key=lambda tl: self.ego_vehicle.get_transform().location.distance(
+            tl.get_stop_waypoints()[0].transform.location))
+        my_traffic_light = traffic_light_group[0]
+        my_traffic_light.set_state(carla.TrafficLightState.Green)
+        traffic_light_group.pop(0)  # Remove my traffic light from the group
+        for tl in traffic_light_group:
+            tl.set_state(carla.TrafficLightState.Red)
+
+        #tick the world to make the traffic light state change effective
+        self.world.tick()
+
+        # Now take one of the red traffic light, turn it off and attach the anomaly to it
+        self.traffic_light = traffic_light_group[0]
+        self.traffic_light.set_state(carla.TrafficLightState.Off)
+        self.traffic_light.set_actor_semantic_tag("Static_Anomaly")
+
+        # Now the vehicles are ignoring the traffic light, so they will run as if it was the red light. So take find those vehicles and set them as Dynamic_Anomaly as soon as they start moving
+        #in the junction
+
+        wps = self.traffic_light.get_stop_waypoints()
+        self.vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=0, max_distance=100, angle=0)
+
+        # Filter the vehicles that are going in the same direction of the waypoint, so the ones that are in front of the traffic light
+        self.vehicles = list(
+            filter(lambda v: v.get_transform().get_forward_vector().dot(wps[0].transform.get_forward_vector()) > 0.9,
+                   self.vehicles))
+
+        # Now in the filtered_vehilces, we may have some vehicles that are spawned after the waypoint, so they already are on the junction, those
+        # vehicles has to be ignored.
+        # (vehicle.get_transform().location - wps[0].transform.location).dot(wps[0].transform.get_forward_vector()) > 0
+        # The difference vehicle.get_transform().location - wps[0].transform.location is a vector from the waypoint to the vehicle
+        # Now if this vector has the same direction of the waypoint forward vector, it means the vehicle is after the waypoint, if it has
+        # the opposite direction, it means the vehicle is before the waypoint. To compute so we use the dot product.
+        # If the dot product is > 0, the vehicle is after the waypoint, so we ignore it
+        # We have that 3 meters is a good distance to consider the vehicle before the waypoint
+        # This also filter the vehicles that are in the same direction on the traffic light, but that already passed the junction
+
+        self.vehicles = list(filter(lambda v: (v.get_transform().location - wps[0].transform.location).dot(
+            wps[0].transform.get_forward_vector()) < 3, self.vehicles))
+
+        # Now we may have some vehicles that are in the same direction as the traffic light, but on another road, so filter them out
+        # We can do this by checking the angle between the difference vector (vehicle - waypoint) and the forward vector. If on the same
+        # direction the dot will be 0.9..., otherwise will be 0.0...
+        self.vehicles = list(filter(lambda v: (v.get_transform().location - wps[0].transform.location).make_unit_vector().dot(
+            wps[0].transform.get_forward_vector()*-1) > 0.7, self.vehicles))
+
         bp_lib = self.world.get_blueprint_library()
         anomaly_to_spawn = bp_lib.filter(f"*{self.name}")[0]
         transform = carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0))
-        self.anomaly = self.world.spawn_actor(anomaly_to_spawn, transform, attach_to=traffic_light, attachment_type=carla.AttachmentType.Rigid)
+        self.anomaly = self.world.spawn_actor(anomaly_to_spawn, transform, attach_to=self.traffic_light, attachment_type=carla.AttachmentType.Rigid)
         if self.anomaly is None:
             print("TrafficLightOff -> Failed to spawn anomaly:", self.name)
             return None
@@ -420,9 +465,9 @@ class TrafficLightOff_Anomaly(Anomaly):
 
     def on_destroy(self):
         super().on_destroy()
-        self.anomaly.parent.freeze(False)
-        self.anomaly.parent.reset_group()
-        self.anomaly.parent.retag_actor()
+        self.traffic_light.freeze(False)
+        self.traffic_light.reset_group()
+        self.traffic_light.retag_actor()
 
 class CarThroughRedLight_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
@@ -459,6 +504,8 @@ class CarThroughRedLight_Anomaly(Anomaly):
 
         wps = self.traffic_light.get_stop_waypoints()
         vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=0, max_distance=60, angle=0)
+
+        #Filter the vehicles that are going in the same direction of the waypoint, so the ones that are in front of the traffic light
         filtered_vehicles = list(filter(lambda v: v.get_transform().get_forward_vector().dot(wps[0].transform.get_forward_vector()) >0.9, vehicles))
 
 
@@ -473,6 +520,9 @@ class CarThroughRedLight_Anomaly(Anomaly):
 
         self.vehicles = list(filter(lambda v: (v.get_transform().location - wps[0].transform.location).dot(wps[0].transform.get_forward_vector()) <3, filtered_vehicles))
 
+        self.vehicles = list(
+            filter(lambda v: (v.get_transform().location - wps[0].transform.location).make_unit_vector().dot(
+                wps[0].transform.get_forward_vector() * -1) > 0.7, self.vehicles))
         # If there's no vehicle in front of the traffic light, we can't make the anomaly happen, so close the execution
         if len(self.vehicles) == 0:
             print("CarThroughRedLight -> No vehicle found in front of the traffic light in order to make the anomaly happen.")
