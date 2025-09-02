@@ -561,7 +561,7 @@ class RoadSignTwisted_Anomaly(Anomaly):
         sign = self.find_objs_in_front_ego_vehicle("traffic.*", min_distance=10, max_distance=30, angle=0.95)
         # The filter "traffic.*" also returns traffic lights, so we need to filter them out
         sign = list(filter(lambda a: a.type_id != "traffic.traffic_light", sign))
-        if sign is None:
+        if len(sign) == 0:
             print("RoadSignTwisted -> No traffic sign found in front of the ego vehicle to attach the anomaly to.")
             return None
         self.sign = sign[0]
