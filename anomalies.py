@@ -558,7 +558,7 @@ class RoadSignTwisted_Anomaly(Anomaly):
         pass
 
     def spawn_anomaly(self):
-        sign = self.find_objs_in_front_ego_vehicle("traffic.*", min_distance=10, max_distance=30, angle=0.95)
+        sign = self.find_objs_in_front_ego_vehicle("traffic.*", min_distance=10, max_distance=30, angle=0.90)
         # The filter "traffic.*" also returns traffic lights, so we need to filter them out
         sign = list(filter(lambda a: a.type_id != "traffic.traffic_light", sign))
         if len(sign) == 0:
@@ -578,4 +578,46 @@ class RoadSignTwisted_Anomaly(Anomaly):
 
     def on_destroy(self):
         self.sign.retag_actor()
+        super().on_destroy()
+
+class RoadSignVandalized_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        self.possible_anomalies = ["stopdestroyed","stoprusted"]
+        self.old_trf = None
+        self.sign = None
+        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        sign = self.find_objs_in_front_ego_vehicle("traffic.*", min_distance=10, max_distance=30, angle=0.90)
+        # The filter "traffic.*" also returns traffic lights, so we need to filter them out
+        sign = list(filter(lambda a: a.type_id != "traffic.traffic_light", sign))
+        if len(sign) == 0:
+            print("RoadSignVandalized -> No traffic sign found in front of the ego vehicle to attach the anomaly to.")
+            return None
+        self.sign = sign[0]
+        self.old_trf = self.sign.get_transform()
+
+        bp_lip = self.world.get_blueprint_library()
+        anomaly_to_spawn = bp_lip.filter(f"*{self.name}")[0]
+        transform = carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0))
+        self.anomaly: carla.Actor = self.world.spawn_actor(anomaly_to_spawn, transform, attach_to=self.sign)
+
+        if self.anomaly is None:
+            print("RoadSignVandalized -> Failed to spawn anomaly:", self.name)
+            return None
+
+        anomaly_to_spawn = bp_lip.filter(random.choice(self.possible_anomalies))[0]
+        self.anomaly: carla.Actor = self.world.spawn_actor(anomaly_to_spawn, self.old_trf)
+
+        if self.anomaly is None:
+            print("RoadSignVandalized -> Failed to spawn vandalized anomaly:", anomaly_to_spawn)
+            return None
+
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+
+    def on_destroy(self):
         super().on_destroy()

@@ -140,9 +140,12 @@ of the ego vehicle is chosen and if present, the vehicle is stopped.
 - `CarThroughRedLight_Anomaly`: If there is a traffic light group in front of the ego vehicle, make the traffic light in front of the ego vehicle green and all the other red. Then select one among the 
 red traffic light and take the first vehicle that is waiting and make it cross the intersection.
   - `handle_semantic_tag(self)` : Sets the semantic tag of the vehicle that crosses the intersection from `Vehicle` to `Anomaly`.
-- `RoadSignTwisted_Anomaly`: If there's a road sign (Stop sign or Yield sign), in front of the ego vehicle, it is twisted randomly.
+- `RoadSignTwisted_Anomaly`: If there's a road sign (Stop sign or Yield sign and all other traffic sign, that inherits from TrafficSignBase), in front of the ego vehicle, it is twisted randomly.
     - `handle_semantic_tag(self)` : Sets the semantic tag of the road sign from `RoadSign` to `Anomaly` when the road sign is twisted.
     - <img src="Images/roadsigntwisted.png">
+- `RoadSignVandalized_Anomaly`: If there's a road sign (Right Now only stop signs) in front of the ego vehicle, it is replace with a vandalized version.
+    - `handle_semantic_tag(self)` : Sets the semantic tag of the road sign from `RoadSign` to `Anomaly` when the road sign is vandalized.
+    - <img src="Images/roadsignvandalized.png">
 
 ### sensors.py
 This file contains the definition of the sensors that can be spawned in the simulation. Each sensor is a class that inherits from `Sensor`, which has a `handle()` method that handles the data received from the sensor. 

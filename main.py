@@ -259,6 +259,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return CarThroughRedLight_Anomaly(world, client, name, ego_vehicle)
     if name == "roadsigntwisted":
         return RoadSignTwisted_Anomaly(world, client, name, ego_vehicle)
+    if name == "roadsignvandalized":
+        return RoadSignVandalized_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
