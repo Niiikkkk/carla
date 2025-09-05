@@ -267,6 +267,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return GarbageBag_Anomaly(world, client, name, ego_vehicle)
     if name == "garbagebagwind":
         return GarbageBagWind_Anomaly(world, client, name, ego_vehicle)
+    if name == "brokenchair":
+        return BrokenChair_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
