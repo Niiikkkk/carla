@@ -621,3 +621,26 @@ class RoadSignVandalized_Anomaly(Anomaly):
 
     def on_destroy(self):
         super().on_destroy()
+
+class Motorcycle_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        ego_vehicle_location = self.ego_vehicle.get_location()
+        wp = self.map.get_waypoint(ego_vehicle_location, project_to_road=True, lane_type=carla.LaneType.Driving)
+        bp_lib = self.world.get_blueprint_library()
+        vespa = bp_lib.filter("*vespa*")[0]
+        sp = wp.next(16)[0].transform
+        sp.location.z = 0.5  # Raise the motorcycle slightly above the ground
+        self.anomaly : carla.Vehicle = self.world.spawn_actor(vespa, sp)
+        #self.anomaly.set_autopilot(True)
+        self.world.tick()
+        print(self.anomaly.get_location())
+        return self.anomaly
+
+    def on_destroy(self):
+        super().on_destroy()
