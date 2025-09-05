@@ -263,6 +263,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return RoadSignVandalized_Anomaly(world, client, name, ego_vehicle)
     if name == "motorcycle":
         return Motorcycle_Anomaly(world, client, name, ego_vehicle)
+    if name == "garbagebag":
+        return GarbageBag_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

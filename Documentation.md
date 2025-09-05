@@ -146,7 +146,9 @@ red traffic light and take the first vehicle that is waiting and make it cross t
 - `RoadSignVandalized_Anomaly`: If there's a road sign (Right Now only stop signs) in front of the ego vehicle, it is replace with a vandalized version.
     - `handle_semantic_tag(self)` : Sets the semantic tag of the road sign from `RoadSign` to `Anomaly` when the road sign is vandalized.
     - <img src="Images/roadsignvandalized.png">
-
+- `GarbageBag_Anomaly`: Spawns a garbage bag in the world, that is placed on the ground, in front of the ego vehicle.
+  - `handle_semantic_tag(self)` : Nothing, the semantic tag is `Anomaly` by default.
+  - <img src="Images/garbagebags.png">
 ### sensors.py
 This file contains the definition of the sensors that can be spawned in the simulation. Each sensor is a class that inherits from `Sensor`, which has a `handle()` method that handles the data received from the sensor. 
 The sensors are spawned in the world and attached to the ego vehicle:
