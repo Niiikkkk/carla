@@ -1,4 +1,5 @@
 import math
+import random
 import sys
 import time
 from typing import Optional
@@ -655,6 +656,29 @@ class GarbageBag_Anomaly(Anomaly):
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
         self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+
+    def on_destroy(self):
+        super().on_destroy()
+
+class GarbageBagWind_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.world.tick()
+        left_vector = self.anomaly.get_transform().get_right_vector() * -1
+        forward_vector = self.anomaly.get_transform().get_forward_vector()
+        median_vector = (left_vector + forward_vector).make_unit_vector()
+        alpha = random.uniform(0, 1)
+        impulse = ((1-alpha)*left_vector+alpha*median_vector)*15
+        impulse.z+=1.5
+        self.anomaly.add_impulse(impulse)
+        self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
         return self.anomaly
 
     def on_destroy(self):
