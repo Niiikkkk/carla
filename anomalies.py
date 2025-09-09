@@ -698,3 +698,19 @@ class BrokenChair_Anomaly(Anomaly):
 
     def on_destroy(self):
         super().on_destroy()
+
+
+class Bikes_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+
+    def on_destroy(self):
+        super().on_destroy()
