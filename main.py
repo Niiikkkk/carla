@@ -271,6 +271,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return BrokenChair_Anomaly(world, client, name, ego_vehicle)
     if name == "bikes":
         return Bikes_Anomaly(world, client, name, ego_vehicle)
+    if name == "hubcap":
+        return Hubcap_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

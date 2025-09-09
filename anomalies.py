@@ -648,7 +648,7 @@ class Motorcycle_Anomaly(Anomaly):
 
 class GarbageBag_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -709,6 +709,26 @@ class Bikes_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+
+    def on_destroy(self):
+        super().on_destroy()
+
+class Hubcap_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.world.tick()
+        trf = self.anomaly.get_transform()
+        trf.location.z += 0.2
+        trf.rotation.roll = -90
+        self.anomaly.set_transform(trf)
         self.anomaly.set_actor_semantic_tag("static_anomaly")
         return self.anomaly
 
