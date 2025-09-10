@@ -561,7 +561,7 @@ def view_lidar(lidar_name):
     pcd = o3d.io.read_point_cloud("output/lidar/",lidar_name)
     o3d.visualization.draw_geometries([pcd])
 
-def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,anomaly_in_waypoint=True,spawn_at_zero=False):
+def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,anomaly_in_waypoint=True,spawn_at_zero=False,spawn_on_right=False,big_mesh=False):
     """Spawn an anomaly in the CARLA simulator. The anomaly will have the same rotation of the ego vehicle
     Args:
         world (carla.World): The CARLA world object.
@@ -574,12 +574,14 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     forward_vector = ego_vehicle.get_transform().rotation.get_forward_vector()
     right_vector = ego_vehicle.get_transform().rotation.get_right_vector()
     # Now add the distance to the vehicle's location to get the new location, the distance will be based on the vehicle's forward vector
-    distance = random.uniform(10,20)
+    distance = random.uniform(12,20)
     # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
     if not is_dynamic:
         right_left = random.uniform(-6,6)
     else:
         # The dynamic anomalies are spawned on the right of the ego vehicle, pick a random from 4 to 6 meters
+        right_left = random.uniform(3,5)
+    if spawn_on_right:
         right_left = random.uniform(3,5)
     distance_vector = right_left*right_vector + distance*forward_vector
     location = ego_vehicle.get_transform().location + distance_vector
@@ -589,7 +591,9 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         location.z = 1
     else:
         if can_be_rotated:
-            location.z = 0.5
+            location.z = 1
+            if big_mesh:
+                location.z = 2
         else:
             location.z = 0.01 # Set the z coordinate to 0 to spawn on the ground
 
@@ -602,10 +606,10 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
 
     rotation: carla.Rotation = ego_vehicle.get_transform().rotation
     if not is_dynamic:
-        rotation.yaw = random.randint(-180,180)
+        rotation.yaw = random.uniform(-180,180)
         if can_be_rotated:
-            rotation.roll = random.randint(-180,180)
-            rotation.pitch = random.randint(-180,180)
+            rotation.roll = random.uniform(-180,180)
+            rotation.pitch = random.uniform(-180,180)
 
     transform:carla.Transform = carla.Transform(location,rotation)
     if anomaly_in_waypoint:

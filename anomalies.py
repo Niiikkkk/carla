@@ -7,7 +7,7 @@ from typing import Optional
 from utils import *
 
 class Anomaly:
-    def __init__(self, world: carla.World, client: carla.Client, name ,ego_vehicle:carla.Actor, is_dynamic, is_character, can_be_rotated, anomaly_in_waypoint, spawn_at_zero=False):
+    def __init__(self, world: carla.World, client: carla.Client, name ,ego_vehicle:carla.Actor, is_dynamic, is_character, can_be_rotated, anomaly_in_waypoint, spawn_at_zero=False, spawn_on_right=False, big_mesh=False):
         self.world = world
         self.client = client
         self.ego_vehicle = ego_vehicle
@@ -18,12 +18,14 @@ class Anomaly:
         self.is_character = is_character
         self.can_be_rotated = can_be_rotated
         self.spawn_at_zero = spawn_at_zero
+        self.spawn_on_right = spawn_on_right
+        self.big_mesh = big_mesh
         self.anomaly: carla.Actor = None
         self.tick = 0
 
     def spawn_anomaly(self):
         print("Spawning anomaly...", self.name)
-        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.is_dynamic, self.is_character, self.can_be_rotated, self.anomaly_in_waypoint, self.spawn_at_zero)
+        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.is_dynamic, self.is_character, self.can_be_rotated, self.anomaly_in_waypoint, self.spawn_at_zero, self.spawn_on_right, self.big_mesh)
         self.anomaly = anomaly
         if self.anomaly:
             print("Anomaly Spawned!")
@@ -648,7 +650,7 @@ class Motorcycle_Anomaly(Anomaly):
 
 class GarbageBag_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False,spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -665,7 +667,7 @@ class GarbageBagWind_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         self.base_wind = None
         self.right = None
-        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         front_back = 1
@@ -725,7 +727,7 @@ class BrokenChair_Anomaly(Anomaly):
 
 class Bikes_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False,spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -815,7 +817,7 @@ class BlowingNewspaper_Anomaly(Anomaly):
 
 class Box_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -830,7 +832,7 @@ class Box_Anomaly(Anomaly):
 
 class PlasticBottle_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -845,7 +847,7 @@ class PlasticBottle_Anomaly(Anomaly):
 
 class WineBottle_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -860,7 +862,7 @@ class WineBottle_Anomaly(Anomaly):
 
 class MetalBottle_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, True, False)
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -872,3 +874,16 @@ class MetalBottle_Anomaly(Anomaly):
 
     def on_destroy(self):
         super().on_destroy()
+
+class Table_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True, big_mesh=True)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.world.tick()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
