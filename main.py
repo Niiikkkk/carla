@@ -277,6 +277,16 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Newspaper_Anomaly(world, client, name, ego_vehicle)
     if name == "blowingnewspaper":
         return BlowingNewspaper_Anomaly(world, client, name, ego_vehicle)
+    if name == "box":
+        return Box_Anomaly(world, client, name, ego_vehicle)
+    if name == "plasticbottle":
+        return PlasticBottle_Anomaly(world, client, name, ego_vehicle)
+    if name == "winebottle":
+        return WineBottle_Anomaly(world, client, name, ego_vehicle)
+    if name == "metalbottle":
+        return MetalBottle_Anomaly(world, client, name, ego_vehicle)
+    if name == "table":
+        return Table_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

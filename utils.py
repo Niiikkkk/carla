@@ -580,7 +580,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         right_left = random.uniform(-6,6)
     else:
         # The dynamic anomalies are spawned on the right of the ego vehicle, pick a random from 4 to 6 meters
-        right_left = random.uniform(4,6)
+        right_left = random.uniform(3,5)
     distance_vector = right_left*right_vector + distance*forward_vector
     location = ego_vehicle.get_transform().location + distance_vector
     if spawn_at_zero:
