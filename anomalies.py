@@ -749,3 +749,43 @@ class Newspaper_Anomaly(Anomaly):
 
     def on_destroy(self):
         super().on_destroy()
+
+class BlowingNewspaper_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        self.start_tick = 0
+        self.base_wind = None
+        self.right = None
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+
+    def handle_semantic_tag(self):
+        front_back = 1
+        if random.random() < 0.2:
+            front_back = -1
+        base_wind = self.base_wind * front_back
+        theta = random.uniform(-math.radians(90),math.radians(90))
+        dir_x = base_wind.x * math.cos(theta) + self.right.x * math.sin(theta)
+        dir_y = base_wind.y * math.cos(theta) + self.right.y * math.sin(theta)
+        vertical = random.uniform(-1.5,2.5)
+
+        force = carla.Vector3D(dir_x, dir_y, vertical)
+
+        torque = carla.Vector3D(random.uniform(-50, 50),
+                                random.uniform(-50, 50),
+                                random.uniform(-20, 20))
+
+        self.anomaly.add_torque(torque*5)
+        self.anomaly.add_force(force*random.uniform(0,5))
+
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.start_tick = self.tick
+        self.world.tick()
+        self.base_wind = self.ego_vehicle.get_transform().get_forward_vector()
+        self.right = self.ego_vehicle.get_transform().get_right_vector()
+        init_force = carla.Vector3D(self.base_wind.x, self.base_wind.y, self.base_wind.z+0.5).make_unit_vector()
+        self.anomaly.add_impulse(init_force)
+        self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
+        return self.anomaly
+
+    def on_destroy(self):
+        super().on_destroy()
