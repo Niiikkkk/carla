@@ -663,21 +663,44 @@ class GarbageBag_Anomaly(Anomaly):
 
 class GarbageBagWind_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        self.base_wind = None
+        self.right = None
         super().__init__(world, client, name, ego_vehicle, True, False, False, False)
 
     def handle_semantic_tag(self):
-        pass
+        front_back = 1
+        if random.random() < 0.2:
+            front_back = -1
+        base_wind = self.base_wind * front_back
+        theta = random.uniform(-math.radians(90), math.radians(90))
+        dir_x = base_wind.x * math.cos(theta) + self.right.x * math.sin(theta)
+        dir_y = base_wind.y * math.cos(theta) + self.right.y * math.sin(theta)
+        vertical = random.uniform(-1.5, 2.5)
+
+        force = carla.Vector3D(dir_x, dir_y, vertical)
+
+        torque = carla.Vector3D(random.uniform(-50, 50),
+                                random.uniform(-50, 50),
+                                random.uniform(-20, 20))
+
+        self.anomaly.add_torque(torque * 5)
+        self.anomaly.add_force(force * random.uniform(5, 8))
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
         self.world.tick()
-        left_vector = self.anomaly.get_transform().get_right_vector() * -1
-        forward_vector = self.anomaly.get_transform().get_forward_vector()
-        median_vector = (left_vector + forward_vector).make_unit_vector()
-        alpha = random.uniform(0, 1)
-        impulse = ((1-alpha)*left_vector+alpha*median_vector)*15
-        impulse.z+=1.5
-        self.anomaly.add_impulse(impulse)
+        self.base_wind = random.choice([self.ego_vehicle.get_transform().get_forward_vector(),
+                                       self.ego_vehicle.get_transform().get_right_vector() * -1])
+        self.right = self.ego_vehicle.get_transform().get_right_vector()
+        # In case the base_wind is the right vector, we want to make sure that the right vector is not the same as the base_wind
+        if self.base_wind.dot(self.right) != 0:
+            self.right = self.ego_vehicle.get_transform().get_forward_vector()
+        self.anomaly.add_impulse(self.base_wind*5)
+        torque = carla.Vector3D(random.uniform(-50, 50),
+                                random.uniform(-50, 50),
+                                random.uniform(-20, 20))
+
+        self.anomaly.add_torque(torque * 5)
         self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
         return self.anomaly
 
