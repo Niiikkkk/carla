@@ -192,7 +192,7 @@ class Ladder_Anomaly(Anomaly):
 
 class Mattress_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False,False)
+        super().__init__(world, client, name, ego_vehicle, False, False, False,False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
