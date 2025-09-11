@@ -295,6 +295,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return ShoppingCart_Anomaly(world, client, name, ego_vehicle)
     if name == "bag":
         return Bag_Anomaly(world, client, name, ego_vehicle)
+    if name == "helmet":
+        return Helmet_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
