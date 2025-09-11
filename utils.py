@@ -597,7 +597,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
             location.z = 0.2 # Set the z coordinate to 0 to spawn on the ground
 
     bp_lib:carla.BlueprintLibrary = world.get_blueprint_library()
-    anomalies = bp_lib.filter(f"*{prop}")
+    anomalies = bp_lib.filter(f"blueprint.{prop}")
     if len(anomalies) == 0:
         print(f"Anomaly {prop} not found.")
         return None
