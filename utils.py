@@ -594,7 +594,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
             #The rotated object can collide with the ground if z is too low, so make it higher. This will be adjusted later
             location.z = 5
         else:
-            location.z = 0.1 # Set the z coordinate to 0 to spawn on the ground
+            location.z = 0.2 # Set the z coordinate to 0 to spawn on the ground
 
     bp_lib:carla.BlueprintLibrary = world.get_blueprint_library()
     anomalies = bp_lib.filter(f"*{prop}")

@@ -289,6 +289,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Table_Anomaly(world, client, name, ego_vehicle)
     if name == "officechair":
         return OfficeChair_Anomaly(world, client, name, ego_vehicle)
+    if name == "oldstove":
+        return OldStove_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
