@@ -591,9 +591,8 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         location.z = 1
     else:
         if can_be_rotated:
-            location.z = 1
-            if big_mesh:
-                location.z = 2
+            #The rotated object can collide with the ground if z is too low, so make it higher. This will be adjusted later
+            location.z = 5
         else:
             location.z = 0.1 # Set the z coordinate to 0 to spawn on the ground
 
@@ -617,6 +616,24 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         transform.location.x = wp.transform.location.x
         transform.location.y = wp.transform.location.y
     anomaly_actor:carla.Actor = world.try_spawn_actor(anomaly, transform)
+
+    if can_be_rotated:
+        #We set z = 5, but is too high, so we need to adjust it to be on the ground
+        # We use the bounding box to get the lowest point of the object, and we use the ground projection to get the ground level
+        # Then we adjust the z coordinate of the object
+
+        #Get the ground level of our location, from this we will get the z coordinate
+        loc = world.ground_projection(location,100)
+        ground_z = loc.location.z
+        #Get the verteces of the bounding box and get the lowest z coordinate
+        vertices = anomaly_actor.bounding_box.get_world_vertices(transform)
+        min_z = min([vertex.z for vertex in vertices])
+        #Calculate the difference between the lowest point of the object and the ground level
+        diff = min_z - ground_z
+        #Adjust the z coordinate of the object
+        transform.location.z = location.z - diff
+        anomaly_actor.set_transform(transform)
+
     if anomaly_actor is None:
         print(f"Failed to spawn {prop} anomaly.")
         return None
