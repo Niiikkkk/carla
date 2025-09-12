@@ -66,6 +66,7 @@ def main(args):
             if args.anomalies:
                 for str_anomaly in args.anomalies:
                     anomaly_object = generate_anomaly_object(world, client, ego_vehicle, str_anomaly)
+                    world.tick()
                     anomaly: carla.Actor = anomaly_object.spawn_anomaly()
                     if anomaly is None:
                         print(str_anomaly + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
@@ -299,6 +300,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Helmet_Anomaly(world, client, name, ego_vehicle)
     if name == "hat":
         return Hat_Anomaly(world, client, name, ego_vehicle)
+    if name == "crash":
+        return Crash_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

@@ -2,7 +2,11 @@ import math
 import random
 import sys
 import time
+from collections import deque
 from typing import Optional
+
+from fontTools.misc.cython import returns
+from pandas.io.formats.format import return_docstring
 
 from utils import *
 
@@ -969,6 +973,142 @@ class Hat_Anomaly(Anomaly):
         self.anomaly = super().spawn_anomaly()
         self.anomaly.set_actor_semantic_tag("static_anomaly")
         return self.anomaly
+
+    def on_destroy(self):
+        super().on_destroy()
+
+class Crash_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+        self.target_v = None
+        self.coll_queue = None
+        self.coll_sen = None
+        self.other_v = None
+        self.wp_target_v = None
+        self.wp_other_v = None
+        self.tm:carla.TrafficManager = None
+        self.target_tick = random.randint(30,50)
+        self.world.debug.draw_arrow(carla.Location(0,0,0), self.ego_vehicle.get_location(), 0.1, 0.1, carla.Color(255,0,0), 5)
+
+    def spawn_vehicles(self, num, start_point:carla.Waypoint):
+        fwv = self.ego_vehicle.get_transform().get_forward_vector()
+        tm = self.client.get_trafficmanager()
+        bp_lib = self.world.get_blueprint_library()
+        vehicles = bp_lib.filter("vehicle.*")
+        return_vechicles = []
+        n=0
+        while n < num:
+            wp: carla.Waypoint = start_point
+            if wp.lane_change == carla.LaneChange.NONE:
+                # No lane change, so spawn vehicles in the same lane
+                location = wp.next(random.uniform(5,20))[0].transform.location
+                location.z += 0.2
+                transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
+                v = random.choice(vehicles)
+                while v.id == "vehicle.nissan.patrol":
+                    v = random.choice(vehicles)
+                v.set_attribute('role_name', 'autopilot')
+                v_tmp = self.world.try_spawn_actor(v, transform)
+                if v_tmp is not None:
+                    v_tmp.set_autopilot(True)
+                    return_vechicles.append(v_tmp)
+                    n+=1
+            else:
+                # Lane change is possible, so randomly choose to change lane or not
+                if random.random() < 0.5:
+                    # Change lane
+                    if wp.lane_change == carla.LaneChange.Left:
+                        wp = wp.get_left_lane()
+                    elif wp.lane_change == carla.LaneChange.Right:
+                        wp = wp.get_right_lane()
+                # Spawn vehicle in the chosen lane
+                location = wp.next(random.uniform(5,20))[0].transform.location
+                location.z += 0.2
+                transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
+                v = random.choice(vehicles)
+                while v.id == "vehicle.nissan.patrol":
+                    v = random.choice(vehicles)
+                v.set_attribute('role_name', 'autopilot')
+                v_tmp = self.world.try_spawn_actor(v, transform)
+                if v_tmp is not None:
+                    v_tmp.set_autopilot(True)
+                    return_vechicles.append(v_tmp)
+                    n+=1
+        return return_vechicles
+
+    def handle_semantic_tag(self):
+        if self.tick == self.target_tick:
+            # lane.id is a value that identify the lane. If we have four lanes, as in MAP 10, the lane id will be:
+            # | 2 | 1 | -1 | -2 |
+            # Now we have to understand if the two vehicles are in the same lane or in different lanes
+            if self.wp_other_v.lane_id == self.wp_target_v.lane_id:
+                #Same lane, so we make the target vehicle go faster and crash into the other vehicle
+                self.tm.set_desired_speed(self.target_v, 300)
+            else:
+                #Different lane, WE SUPPOSE THAT THERE ARE ONLY 2 LANES FOR EACH DIRECTION, so | 2 | 1 | -1 | -2 |
+                if self.wp_target_v.lane_change == carla.LaneChange.Left:
+                    #Target vehicle can change lane only to the left, so the other vehicle is on the right lane
+                    self.tm.force_lane_change(self.target_v, False)
+                    self.tm.set_desired_speed(self.target_v, 300)
+                elif self.wp_target_v.lane_change == carla.LaneChange.Right:
+                    #Target vehicle can change lane only to the right, so the other vehicle is on the left lane
+                    self.tm.force_lane_change(self.target_v, True)
+                    self.tm.set_desired_speed(self.target_v, 300)
+
+        if len(self.coll_queue) != 0 :
+            coll_event: carla.CollisionEvent = self.coll_queue.pop()
+            # The collision event is triggered when the target vehicle collides with something
+            # So we stop both the vehicles and set them as dynamic anomaly
+            coll_event.actor.set_autopilot(False)
+            coll_event.other_actor.set_autopilot(False)
+            coll_event.actor.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
+            coll_event.other_actor.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
+            coll_event.actor.set_actor_semantic_tag("dynamic_anomaly")
+            coll_event.other_actor.set_actor_semantic_tag("dynamic_anomaly")
+            print(coll_event)
+
+    def spawn_anomaly(self):
+        # Find two vehicles in front of the ego vehicle, then make them crash into each other
+        vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=2, max_distance=30, angle=0.9)
+        #This filter the vehicles that are going in the same direction of the ego vehicle
+        filtered_vehicles = list(
+            filter(lambda v: v.get_transform().get_forward_vector().dot(
+                self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
+                   vehicles))
+        if len(filtered_vehicles) < 2:
+            print("Crash_Anomaly -> No vehicles found in front of the ego vehicle to make them crash into each other. Creating two vehicles...")
+            spawned_vehicles = self.spawn_vehicles(2-len(filtered_vehicles),self.world.get_map().get_waypoint(self.ego_vehicle.get_location()))
+            self.world.tick()
+            vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=2, max_distance=30, angle=0.9)
+            filtered_vehicles = list(
+                filter(lambda v: v.get_transform().get_forward_vector().dot(
+                    self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
+                       vehicles))
+            filtered_vehicles.sort(key = lambda v: v.get_location().distance(self.ego_vehicle.get_location()))
+        #The vehicle in position 0 will be the closest to the ego vehicle
+        self.target_v = filtered_vehicles[0]
+        self.tm:carla.TrafficManager = self.client.get_trafficmanager()
+        #Now self.target_v will ignore alle the other vehicles
+        self.tm.ignore_vehicles_percentage(self.target_v,100)
+        #Also make the other vehicles ignore the target vehicle
+        for v in filtered_vehicles[1:]:
+            self.tm.collision_detection(v, self.target_v, False)
+
+        # E POI FARE IN MODO CHE TARGET V TOCCHI UN ALTRO VEICOLO
+        self.other_v = filtered_vehicles[1]
+        self.wp_other_v:carla.Waypoint = self.world.get_map().get_waypoint(self.other_v.get_location(), project_to_road=True, lane_type=carla.LaneType.Driving)
+        self.wp_target_v : carla.Waypoint = self.world.get_map().get_waypoint(self.target_v.get_location(), project_to_road=True, lane_type=carla.LaneType.Driving)
+        print("Target vehicle:", self.target_v, " in lane:", self.wp_other_v.lane_id, " at location:", self.target_v.get_location())
+        print("Other vehicle:", self.other_v, " in lane:", self.wp_target_v.lane_id, " at location:", self.other_v.get_location())
+
+        self.coll_sen: carla.Sensor = attach_collision_sensor(None, self.world, self.client, self.target_v)
+        self.coll_queue = deque(maxlen=1)
+        self.coll_sen.listen(lambda data: self.coll_queue.append(data))
+
+        bp_lib = self.world.get_blueprint_library()
+        anomaly = bp_lib.filter(f"*{self.name}")[0]
+        self.anomaly = self.world.spawn_actor(anomaly, carla.Transform(carla.Location(0,0,0),carla.Rotation(0,0,0)), attach_to=self.target_v, attachment_type=carla.AttachmentType.Rigid)
+        return anomaly
 
     def on_destroy(self):
         super().on_destroy()
