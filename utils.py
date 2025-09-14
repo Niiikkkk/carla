@@ -574,10 +574,10 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     forward_vector = ego_vehicle.get_transform().rotation.get_forward_vector()
     right_vector = ego_vehicle.get_transform().rotation.get_right_vector()
     # Now add the distance to the vehicle's location to get the new location, the distance will be based on the vehicle's forward vector
-    distance = random.uniform(12,20)
+    distance = random.uniform(10,20)
     # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
     if not is_dynamic:
-        right_left = random.uniform(-6,6)
+        right_left = random.uniform(-6,5)
     else:
         # The dynamic anomalies are spawned on the right of the ego vehicle, pick a random from 4 to 6 meters
         right_left = random.uniform(3,5)
