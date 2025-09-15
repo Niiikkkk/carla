@@ -306,6 +306,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Bird_Anomaly(world, client, name, ego_vehicle)
     if name == "trafficcone":
         return TrafficCone_Anomaly(world, client, name, ego_vehicle)
+    if name == "dangerdriver":
+        return DangerDriver_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

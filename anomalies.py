@@ -1143,3 +1143,131 @@ class TrafficCone_Anomaly(Anomaly):
 
     def on_destroy(self):
         super().on_destroy()
+
+class DangerDriver_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        self.vehicles = []
+        self.target_vehicle = None
+        self.coll_queue = None
+        self.coll_sen = None
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
+
+    def handle_semantic_tag(self):
+        if len(self.coll_queue) != 0:
+            coll_event: carla.CollisionEvent = self.coll_queue.pop()
+            print("DangerDriver_Anomaly -> Collision detected:", coll_event)
+            # The collision event is triggered when the target vehicle collides with something
+            # So we stop the target vehicle and set it as anomaly
+            coll_event.actor.set_autopilot(False)
+            coll_event.actor.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
+            if coll_event.other_actor.type_id.startswith("vehicle."):
+                coll_event.other_actor.set_autopilot(False)
+                coll_event.other_actor.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
+                coll_event.other_actor.set_actor_semantic_tag("static_anomaly")
+
+
+    def spawn_vehicles(self, num, start_point:carla.Waypoint):
+        fwv = self.ego_vehicle.get_transform().get_forward_vector()
+        tm = self.client.get_trafficmanager()
+        bp_lib = self.world.get_blueprint_library()
+        vehicles = bp_lib.filter("vehicle.*")
+        return_vechicles = []
+        n=0
+        while n < num:
+            wp: carla.Waypoint = start_point
+            if wp.lane_change == carla.LaneChange.NONE:
+                # No lane change, so spawn vehicles in the same lane
+                location = wp.next(random.uniform(5,10))[0].transform.location
+                location.z += 0.2
+                transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
+                v = random.choice(vehicles)
+                while v.id == "vehicle.nissan.patrol":
+                    v = random.choice(vehicles)
+                v.set_attribute('role_name', 'autopilot')
+                v_tmp = self.world.try_spawn_actor(v, transform)
+                if v_tmp is not None:
+                    v_tmp.set_autopilot(True)
+                    return_vechicles.append(v_tmp)
+                    n+=1
+            else:
+                # Lane change is possible, so randomly choose to change lane or not
+                if random.random() < 0.5:
+                    # Change lane
+                    if wp.lane_change == carla.LaneChange.Left:
+                        wp = wp.get_left_lane()
+                    elif wp.lane_change == carla.LaneChange.Right:
+                        wp = wp.get_right_lane()
+                # Spawn vehicle in the chosen lane
+                location = wp.next(random.uniform(5,10))[0].transform.location
+                location.z += 0.2
+                transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
+                v = random.choice(vehicles)
+                while v.id == "vehicle.nissan.patrol":
+                    v = random.choice(vehicles)
+                v.set_attribute('role_name', 'autopilot')
+                v_tmp = self.world.try_spawn_actor(v, transform)
+                if v_tmp is not None:
+                    v_tmp.set_autopilot(True)
+                    return_vechicles.append(v_tmp)
+                    n+=1
+        return return_vechicles
+
+    def spawn_anomaly(self):
+        print("DangerDriver -> Spawning DangerDriver anomaly...")
+        vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=2, max_distance=30, angle=0.9)
+        # This filter the vehicles that are going in the same direction of the ego vehicle
+        filtered_vehicles = list(
+            filter(lambda v: v.get_transform().get_forward_vector().dot(
+                self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
+                   vehicles))
+        if len(filtered_vehicles) < 3:
+            print("DangerDriver -> No vehicle found in front of the ego vehicle to attach the anomaly to. Spawning one vehicle...")
+            spawned_vehicles = self.spawn_vehicles(3-len(filtered_vehicles),self.world.get_map().get_waypoint(self.ego_vehicle.get_location()))
+            self.world.tick()
+            vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=2, max_distance=30, angle=0.9)
+            # This filter the vehicles that are going in the same direction of the ego vehicle
+            filtered_vehicles = list(
+                filter(lambda v: v.get_transform().get_forward_vector().dot(
+                    self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
+                       vehicles))
+
+        #Now we sort the vehicles by distance to the ego vehicle, so the first one is the closest to the ego vehicle
+        filtered_vehicles.sort(key=lambda v: v.get_transform().location.distance(self.ego_vehicle.get_transform().location))
+
+        self.target_vehicle = filtered_vehicles[0]
+        print("DangerDriver -> Target vehicle:", self.target_vehicle)
+
+        tm:carla.TrafficManager = self.client.get_trafficmanager()
+        # Now self.target_vehicle will always be close to the other vehicles
+        tm.distance_to_leading_vehicle(self.target_vehicle, 1)
+        # Make the target vehicle go very fast
+        tm.set_desired_speed(self.target_vehicle,600)
+        # Make the target vehicle ignore the traffic lights 60% of the time
+        tm.ignore_lights_percentage(self.target_vehicle,60)
+        # Make the target vehicle ignore signs 60% of the time
+        tm.ignore_signs_percentage(self.target_vehicle,60)
+        # Make the target vehicle change lane very often
+        tm.random_left_lanechange_percentage(self.target_vehicle, 100)
+        tm.random_right_lanechange_percentage(self.target_vehicle, 100)
+        # Make the target vehicle ignore other vehicles 60% of the time
+        tm.ignore_vehicles_percentage(self.target_vehicle,40)
+
+        self.target_vehicle.set_actor_semantic_tag("dynamic_anomaly")
+
+        #Set up collision sensor
+        self.coll_sen: carla.Sensor = attach_collision_sensor(None, self.world, self.client, self.target_vehicle)
+        self.coll_queue = deque(maxlen=1)
+        self.coll_sen.listen(lambda data: self.coll_queue.append(data))
+
+        bp_lib = self.world.get_blueprint_library()
+        anomaly_to_spawn = bp_lib.filter(f"*{self.name}")[0]
+        transform = carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0))
+        self.anomaly = self.world.spawn_actor(anomaly_to_spawn, transform, attach_to=self.target_vehicle, attachment_type=carla.AttachmentType.Rigid)
+        if self.anomaly is None:
+            print("DangerDriver -> Failed to spawn anomaly:", self.name)
+            return None
+
+        return self.anomaly
+
+    def on_destroy(self):
+        super().on_destroy()
