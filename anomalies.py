@@ -1250,7 +1250,7 @@ class DangerDriver_Anomaly(Anomaly):
         tm.random_left_lanechange_percentage(self.target_vehicle, 80)
         tm.random_right_lanechange_percentage(self.target_vehicle, 80)
         # Make the target vehicle ignore other vehicles 60% of the time
-        tm.ignore_vehicles_percentage(self.target_vehicle,40)
+        tm.ignore_vehicles_percentage(self.target_vehicle,60)
 
         self.target_vehicle.set_actor_semantic_tag("dynamic_anomaly")
 
