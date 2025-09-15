@@ -577,7 +577,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     distance = random.uniform(10,20)
     # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
     if not is_dynamic:
-        right_left = random.uniform(-6,5)
+        right_left = random.uniform(-6,6)
     else:
         # The dynamic anomalies are spawned on the right of the ego vehicle, pick a random from 4 to 6 meters
         right_left = random.uniform(3,5)
@@ -623,13 +623,16 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         # Then we adjust the z coordinate of the object
 
         #Get the ground level of our location, from this we will get the z coordinate
-        loc = world.ground_projection(location,100)
-        ground_z = loc.location.z
+        points = world.cast_ray(location,location-carla.Location(z=100))
+        street = points[-1]
+        print(street.location)
+        ground_z = street.location.z
         #Get the verteces of the bounding box and get the lowest z coordinate
         vertices = anomaly_actor.bounding_box.get_world_vertices(transform)
         min_z = min([vertex.z for vertex in vertices])
         #Calculate the difference between the lowest point of the object and the ground level
         diff = min_z - ground_z
+        print(min_z, ground_z)
         #Adjust the z coordinate of the object
         transform.location.z = location.z - diff + 0.05
         anomaly_actor.set_transform(transform)
