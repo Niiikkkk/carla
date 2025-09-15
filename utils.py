@@ -631,7 +631,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         #Calculate the difference between the lowest point of the object and the ground level
         diff = min_z - ground_z
         #Adjust the z coordinate of the object
-        transform.location.z = location.z - diff
+        transform.location.z = location.z - diff + 0.05
         anomaly_actor.set_transform(transform)
 
     if anomaly_actor is None:
