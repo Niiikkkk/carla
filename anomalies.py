@@ -1247,8 +1247,8 @@ class DangerDriver_Anomaly(Anomaly):
         # Make the target vehicle ignore signs 60% of the time
         tm.ignore_signs_percentage(self.target_vehicle,60)
         # Make the target vehicle change lane very often
-        tm.random_left_lanechange_percentage(self.target_vehicle, 100)
-        tm.random_right_lanechange_percentage(self.target_vehicle, 100)
+        tm.random_left_lanechange_percentage(self.target_vehicle, 80)
+        tm.random_right_lanechange_percentage(self.target_vehicle, 80)
         # Make the target vehicle ignore other vehicles 60% of the time
         tm.ignore_vehicles_percentage(self.target_vehicle,40)
 
