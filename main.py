@@ -50,7 +50,7 @@ def main(args):
             anomalies = []
             all_vehicles = []
             sensors = []
-            ego_vehicle: carla.Actor = spawn_ego_vehicle(world, client, args)
+            ego_vehicle = spawn_ego_vehicle(world, client, args)
             if ego_vehicle is None:
                 raise Exception("Ego vehicle not spawned, exiting...")
 
@@ -115,6 +115,12 @@ def main(args):
                                 print(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
                                 flag = True
                                 break
+                            # If the anomaly is just "attached" to the parent actor, check if the parent actor is the one collided with
+                            if anomaly_obj.anomaly.get_parent() is not None:
+                                if coll_event.other_actor.id == anomaly_obj.anomaly.get_parent().id:
+                                    print(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
+                                    flag = True
+                                    break
                         if flag:
                             break
 
