@@ -316,6 +316,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return DangerDriver_Anomaly(world, client, name, ego_vehicle)
     if name == "billboard":
         return BillBoard_Anomaly(world, client, name, ego_vehicle)
+    if name == "fallenstreetlight":
+        return FallenStreetLight_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

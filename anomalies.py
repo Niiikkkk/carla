@@ -1283,3 +1283,17 @@ class BillBoard_Anomaly(Anomaly):
 
     def on_destroy(self):
         super().on_destroy()
+
+class FallenStreetLight_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        self.sign = None
+        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+
+    def handle_semantic_tag(self):
+        pass
+
+    def spawn_anomaly(self):
+        return super().spawn_anomaly()
+
+    def on_destroy(self):
+        super().on_destroy()
