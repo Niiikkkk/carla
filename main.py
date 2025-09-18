@@ -324,6 +324,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Stroller_Anomaly(world, client, name, ego_vehicle)
     if name == "fuelcan":
         return FuelCan_Anomaly(world, client, name, ego_vehicle)
+    if name == "constructionbarrier":
+        return ConstructionBarrier_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
