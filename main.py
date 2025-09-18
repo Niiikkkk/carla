@@ -320,6 +320,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return FallenStreetLight_Anomaly(world, client, name, ego_vehicle)
     if name == "book":
         return Book_Anomaly(world, client, name, ego_vehicle)
+    if name == "stroller":
+        return Stroller_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
