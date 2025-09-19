@@ -607,7 +607,14 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         # cast_ray return the points of intersection with the world, if the length of the points is more than 1 (just one is fine, it's the ground), it means that the ray hit something
         # so we need to find a new location.
         # step_size is the distance between each ray, the smaller the step_size, the more rays are casted, but the more computationally expensive it is
-        step_size = 0.2
+
+
+        # Let's say that we cast a ray each 0.2 meters, but if the mash is very small, we can cast a ray each 0.05 meters
+        # If one between the extent.x and extent.y is less than 0.1, we set the step_size to 0.05
+        if extent.x < 0.1 or extent.y < 0.1:
+            step_size = 0.05
+        else:
+            step_size = 0.2
         points_x = extent.x * 2 / step_size
         points_y = extent.y * 2 / step_size
         is_valid = True
