@@ -20,6 +20,9 @@ Work flow (the first four steps are the explained in the documentation https://c
    - GetTagFromString() : add the new tag to the switch
 4. Define the color in CityscapesPalette.h 
 5. In PythonAPI/carla/src/Actor.cpp, modify the function GetTagFromString() to return the new tag when the string is passed, this should be the same as GetTagFromString() in Tagger.cpp
+## Make props interactive with vehicles
+We have to modify the traffic manager C++ classes. In particular, add the prop to the registered actors in ALSM.cpp. Then handle the collision
+event cycle in CollisionStage.cpp.
 # Python
 ### Main.py
 This file contains all the logic for connecting to the Carla server, spawning objects, and the for-loop simulation. The simulation starts with the mustang as an ego vehicle, some other vehicles and some pedestrians. If specified, anomalies are spawned. The simulation can stop for three main causes:
