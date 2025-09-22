@@ -334,6 +334,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return CarMirror_Anomaly(world, client, name, ego_vehicle)
     if name == "drone":
         return Drone_Anomaly(world, client, name, ego_vehicle)
+    if name == "umbrella":
+        return Umbrella_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
