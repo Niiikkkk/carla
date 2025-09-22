@@ -671,19 +671,23 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         diff = min_z - ground_z
         # Adjust the z coordinate of the object
         transform.location.z = transform.location.z - diff + 0.05
-        anomaly_tmp.set_transform(transform)
+
 
     if anomaly_in_waypoint:
         wp = map.get_waypoint(transform.location, project_to_road=True, lane_type=carla.LaneType.Sidewalk)
         transform.location.x = wp.transform.location.x
         transform.location.y = wp.transform.location.y
-    anomaly_tmp.set_transform(transform)
 
-    if anomaly_tmp is None:
+    #We destroy the test anomaly and spawn the real one, with the right transform
+    anomaly_tmp.destroy()
+    world.tick()
+    anomaly_actor = world.spawn_actor(anomaly, transform)
+
+    if anomaly_actor is None:
         print(f"Failed to spawn {prop} anomaly.")
         return None
     print(f"Spawned {prop} anomaly.")
-    return anomaly_tmp
+    return anomaly_actor
 
 def destroy_anomalies(world,client,anomaly_actors):
     """Destroy the anomalies in the CARLA simulator.
