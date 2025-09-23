@@ -139,18 +139,15 @@ class Person_Anomaly(Anomaly):
 
 class Tree_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+        super().__init__(world, client, name, ego_vehicle, True, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
-        #If the tree is starting to fall, we want to set the semantic tag to Dynamic_Anomaly
-        current_rotation = self.anomaly.get_transform().rotation
-        # pitch is the x axis rotation, roll is the y axis rotation
-        if abs(current_rotation.pitch) > 10 or abs(current_rotation.roll) > 10:
-            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
-
+        pass
 
     def spawn_anomaly(self):
-        return super().spawn_anomaly()
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+        return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()

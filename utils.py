@@ -584,59 +584,57 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         return None
     anomaly: carla.ActorBlueprint = anomalies[0]
 
-    anomaly_tmp: carla.Actor = None
-    while True:
-        distance = random.uniform(10,20)
-        # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
-        if not is_dynamic:
-            right_left = random.uniform(-6,6)
-        else:
-            # The dynamic anomalies are spawned on the right of the ego vehicle, pick a random from 4 to 6 meters
-            right_left = random.uniform(3,5)
-        if spawn_on_right:
-            right_left = random.uniform(3,5)
-        distance_vector = right_left*right_vector + distance*forward_vector
-        location = ego_vehicle.get_transform().location + distance_vector
+    anomaly_tmp = world.spawn_actor(anomaly, carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0)))
+    if not spawn_at_zero:
+        while True:
+            distance = random.uniform(10,20)
+            # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
+            if not is_dynamic:
+                right_left = random.uniform(-6,6)
+            else:
+                # The dynamic anomalies are spawned on the right of the ego vehicle, pick a random from 4 to 6 meters
+                right_left = random.uniform(3,5)
+            if spawn_on_right:
+                right_left = random.uniform(3,5)
+            distance_vector = right_left*right_vector + distance*forward_vector
+            location = ego_vehicle.get_transform().location + distance_vector
 
-        if anomaly_tmp is None:
-            anomaly_tmp = world.spawn_actor(anomaly, carla.Transform(carla.Location(0,0,0), carla.Rotation(0,0,0)))
-
-        extent = anomaly_tmp.bounding_box.extent
-        #The extent is half the size of the bounding box, so we need to multiply by 2 to get the full size
-        #Here we check if the object is colliding with something, we do this by casting rays in the area of the object
-        # cast_ray return the points of intersection with the world, if the length of the points is more than 1 (just one is fine, it's the ground), it means that the ray hit something
-        # so we need to find a new location.
-        # step_size is the distance between each ray, the smaller the step_size, the more rays are casted, but the more computationally expensive it is
+            extent = anomaly_tmp.bounding_box.extent
+            #The extent is half the size of the bounding box, so we need to multiply by 2 to get the full size
+            #Here we check if the object is colliding with something, we do this by casting rays in the area of the object
+            # cast_ray return the points of intersection with the world, if the length of the points is more than 1 (just one is fine, it's the ground), it means that the ray hit something
+            # so we need to find a new location.
+            # step_size is the distance between each ray, the smaller the step_size, the more rays are casted, but the more computationally expensive it is
 
 
-        # Let's say that we cast a ray each 0.2 meters, but if the mash is very small, we can cast a ray each 0.05 meters
-        # If one between the extent.x and extent.y is less than 0.1, we set the step_size to 0.05
-        if extent.x < 0.1 or extent.y < 0.1:
-            step_size = 0.05
-        else:
-            step_size = 0.2
-        points_x = extent.x * 2 / step_size
-        points_y = extent.y * 2 / step_size
-        is_valid = True
-        valid_labels = [carla.CityObjectLabel.Roads, carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
-                        carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain]
-        for i in range(int(points_x)):
-            for j in range(int(points_y)):
-                x = location.x - extent.x + i * step_size
-                y = location.y - extent.y + j * step_size
-                test_location = carla.Location(x=x,y=y,z=10)
-                points = world.cast_ray(test_location, test_location - carla.Location(z=100))
-                if len(points) != 1:
-                    labels = [point.label for point in points]
-                    # Check if each label in labels is in valid_labels
-                    is_valid = all(x in valid_labels for x in labels)
-                    if not is_valid:
-                        break
-            if not is_valid:
+            # Let's say that we cast a ray each 0.2 meters, but if the mash is very small, we can cast a ray each 0.05 meters
+            # If one between the extent.x and extent.y is less than 0.1, we set the step_size to 0.05
+            if extent.x < 0.1 or extent.y < 0.1:
+                step_size = 0.05
+            else:
+                step_size = 0.2
+            points_x = extent.x * 2 / step_size
+            points_y = extent.y * 2 / step_size
+            is_valid = True
+            valid_labels = [carla.CityObjectLabel.Roads, carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
+                            carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain]
+            for i in range(int(points_x)):
+                for j in range(int(points_y)):
+                    x = location.x - extent.x + i * step_size
+                    y = location.y - extent.y + j * step_size
+                    test_location = carla.Location(x=x,y=y,z=10)
+                    points = world.cast_ray(test_location, test_location - carla.Location(z=100))
+                    if len(points) != 1:
+                        labels = [point.label for point in points]
+                        # Check if each label in labels is in valid_labels
+                        is_valid = all(x in valid_labels for x in labels)
+                        if not is_valid:
+                            break
+                if not is_valid:
+                    break
+            if is_valid:
                 break
-        if is_valid:
-            break
-        print(f"Anomaly colliding with something, at {location} finding new location...")
+            print(f"Anomaly colliding with something, at {location} finding new location...")
 
     if spawn_at_zero:
         location = carla.Location(x=0,y=0,z=0)
