@@ -341,6 +341,12 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Drone_Anomaly(world, client, name, ego_vehicle)
     if name == "umbrella":
         return Umbrella_Anomaly(world, client, name, ego_vehicle)
+    if name == "tierscooter":
+        return TierScooter_Anomaly(world, client, name, ego_vehicle)
+    if name == "scooter":
+        return Scooter_Anomaly(world, client, name, ego_vehicle)
+    if name == "brick":
+        return Brick_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
