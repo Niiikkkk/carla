@@ -83,6 +83,11 @@ def main(args):
                 coll_sen.listen(lambda data: coll_queue.append(data))
                 sensors.append(Collision_Sensor(coll_queue, coll_sen))
 
+            #Wait 1.5 second (1.5/simulation_time_for_tick), to let everything spawn properly and adjust their rotation,
+            # then set the autopilot to true and the sensors
+            for _ in range(int(1.5/simulation_time_for_tick)):
+                world.tick()
+
             # Set up the sensors
             set_up_sensors(args, client, ego_vehicle, sensors, world)
 
