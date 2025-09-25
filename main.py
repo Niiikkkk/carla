@@ -347,6 +347,24 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Scooter_Anomaly(world, client, name, ego_vehicle)
     if name == "brick":
         return Brick_Anomaly(world, client, name, ego_vehicle)
+    if name == "cardoor":
+        return CarDoor_Anomaly(world, client, name, ego_vehicle)
+    if name == "rock":
+        return Rock_Anomaly(world, client, name, ego_vehicle)
+    if name == "hoodcar":
+        return HoodCar_Anomaly(world, client, name, ego_vehicle)
+    if name == "trunkcar":
+        return TrunkCar_Anomaly(world, client, name, ego_vehicle)
+    if name == "kidtoy":
+        return KidToy_Anomaly(world, client, name, ego_vehicle)
+    if name == "mannequin":
+        return Mannequin_Anomaly(world, client, name, ego_vehicle)
+    if name == "tablet":
+        return Tablet_Anomaly(world, client, name, ego_vehicle)
+    if name == "laptop":
+        return Laptop_Anomaly(world, client, name, ego_vehicle)
+    if name == "smartphone":
+        return Smartphone_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

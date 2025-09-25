@@ -609,15 +609,17 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
 
             # Let's say that we cast a ray each 0.2 meters, but if the mash is very small, we can cast a ray each 0.05 meters
             # If one between the extent.x and extent.y is less than 0.1, we set the step_size to 0.05
-            if extent.x < 0.1 or extent.y < 0.1:
+
+            if extent.x < 0.2 or extent.y < 0.2:
                 step_size = 0.05
             else:
                 step_size = 0.2
             points_x = extent.x * 2 / step_size
             points_y = extent.y * 2 / step_size
             is_valid = True
+            #If we have one on this below, we are good to go. NONE means no label, so is fine too (for example a box collision has NONE label)
             valid_labels = [carla.CityObjectLabel.Roads, carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
-                            carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain]
+                            carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain, carla.CityObjectLabel.NONE]
             for i in range(int(points_x)):
                 for j in range(int(points_y)):
                     x = location.x - extent.x + i * step_size
@@ -634,7 +636,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
                     break
             if is_valid:
                 break
-            print(f"Anomaly colliding with something, at {location} finding new location...")
+            print(f"Anomaly {prop} colliding with {labels}, at {location} finding new location...")
 
     if spawn_at_zero:
         location = carla.Location(x=0,y=0,z=0)
@@ -659,16 +661,22 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         # Then we adjust the z coordinate of the object
 
         # Get the ground level of our location, from this we will get the z coordinate
-        points = world.cast_ray(transform.location, transform.location - carla.Location(z=100))
+        valid_labels = [carla.CityObjectLabel.Roads, carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
+                        carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain]
+        points = world.cast_ray(transform.location, transform.location - carla.Location(z=15))
+        #filter the point, keeping only the ones that are in valid_labels
+        points = [point for point in points if point.label in valid_labels]
         street = points[-1]
         ground_z = street.location.z
         # Get the verteces of the bounding box and get the lowest z coordinate
         vertices = anomaly_tmp.bounding_box.get_world_vertices(transform)
         min_z = min([vertex.z for vertex in vertices])
+        print(prop, ground_z , min_z)
         # Calculate the difference between the lowest point of the object and the ground level
         diff = min_z - ground_z
         # Adjust the z coordinate of the object
-        transform.location.z = transform.location.z - diff + 0.05
+        transform.location.z = transform.location.z - diff + 0.15
+        print(transform.location.z)
 
 
     if anomaly_in_waypoint:
