@@ -365,6 +365,20 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Laptop_Anomaly(world, client, name, ego_vehicle)
     if name == "smartphone":
         return Smartphone_Anomaly(world, client, name, ego_vehicle)
+    if name == "television":
+        return Television_Anomaly(world, client, name, ego_vehicle)
+    if name == "washingmachine":
+        return WashingMachine_Anomaly(world, client, name, ego_vehicle)
+    if name == "fridge":
+        return Fridge_Anomaly(world, client, name, ego_vehicle)
+    if name == "pilesand":
+        return PileSand_Anomaly(world, client, name, ego_vehicle)
+    if name == "shovel":
+        return Shovel_Anomaly(world, client, name, ego_vehicle)
+    if name == "rake":
+        return Rake_Anomaly(world, client, name, ego_vehicle)
+    if name == "deliverybox":
+        return DeliveryBox_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
