@@ -379,6 +379,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Rake_Anomaly(world, client, name, ego_vehicle)
     if name == "deliverybox":
         return DeliveryBox_Anomaly(world, client, name, ego_vehicle)
+    if name == "fallentree":
+        return FallenTree_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
