@@ -35,6 +35,52 @@ class Anomaly:
             print("Anomaly Spawned!")
         return anomaly
 
+    def spawn_vehicles(self, num, start_point: carla.Waypoint):
+            fwv = self.ego_vehicle.get_transform().get_forward_vector()
+            tm = self.client.get_trafficmanager()
+            bp_lib = self.world.get_blueprint_library()
+            vehicles = bp_lib.filter("vehicle.*")
+            return_vechicles = []
+            n = 0
+            while n < num:
+                wp: carla.Waypoint = start_point
+                if wp.lane_change == carla.LaneChange.NONE:
+                    # No lane change, so spawn vehicles in the same lane
+                    location = wp.next(random.uniform(5, 20))[0].transform.location
+                    location.z += 0.2
+                    transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
+                    v = random.choice(vehicles)
+                    while v.id == "vehicle.nissan.patrol":
+                        v = random.choice(vehicles)
+                    v.set_attribute('role_name', 'autopilot')
+                    v_tmp = self.world.try_spawn_actor(v, transform)
+                    if v_tmp is not None:
+                        v_tmp.set_autopilot(True)
+                        return_vechicles.append(v_tmp)
+                        n += 1
+                else:
+                    # Lane change is possible, so randomly choose to change lane or not
+                    if random.random() < 0.5:
+                        # Change lane
+                        if wp.lane_change == carla.LaneChange.Left:
+                            wp = wp.get_left_lane()
+                        elif wp.lane_change == carla.LaneChange.Right:
+                            wp = wp.get_right_lane()
+                    # Spawn vehicle in the chosen lane
+                    location = wp.next(random.uniform(5, 20))[0].transform.location
+                    location.z += 0.2
+                    transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
+                    v = random.choice(vehicles)
+                    while v.id == "vehicle.nissan.patrol":
+                        v = random.choice(vehicles)
+                    v.set_attribute('role_name', 'autopilot')
+                    v_tmp = self.world.try_spawn_actor(v, transform)
+                    if v_tmp is not None:
+                        v_tmp.set_autopilot(True)
+                        return_vechicles.append(v_tmp)
+                        n += 1
+            return return_vechicles
+
     def handle_semantic_tag(self):
         raise NotImplementedError("This method should be overridden by subclasses")
 
@@ -368,13 +414,19 @@ class InstantCarBreak_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         print("InstantCarBreak -> Spawning InstantCarBreak anomaly...")
-        vehicle_to_attach = self.find_obj_in_front_ego_vehicle("vehicle.*", min_distance=10, max_distance=20)
-        if vehicle_to_attach is None:
-            print("InstantCarBreak -> No vehicle found in front of the ego vehicle to attach the anomaly to.")
-
-            return None
-        else:
-            print("InstantCarBreak -> Found vehicle to attach the anomaly to:", vehicle_to_attach)
+        vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=2, max_distance=30, angle=0.9)
+        filtered_vehicles = list(
+            filter(lambda v: v.get_transform().get_forward_vector().dot(
+                self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
+                   vehicles))
+        if len(vehicles) < 2:
+            print("InstantCarBreak -> No vehicle found in front of the ego vehicle to attach the anomaly to. Spawning some vehicles...")
+            spawned = self.spawn_vehicles(2-len(vehicles), self.map.get_waypoint(self.ego_vehicle.get_location()))
+            if len(spawned) == 0:
+                print("InstantCarBreak -> Failed to spawn vehicles in front of the ego vehicle.")
+                return None
+        vehicle_to_attach = vehicles[0]
+        print("InstantCarBreak -> Found vehicle to attach the anomaly to:", vehicle_to_attach)
         bp_lib: carla.BlueprintLibrary = self.world.get_blueprint_library()
         anomaly_to_spawn = bp_lib.filter(f"*{self.name}")[0]
         transform = carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0))
@@ -983,52 +1035,6 @@ class Crash_Anomaly(Anomaly):
         self.target_tick = random.randint(30,50)
         self.world.debug.draw_arrow(carla.Location(0,0,0), self.ego_vehicle.get_location(), 0.1, 0.1, carla.Color(255,0,0), 5)
 
-    def spawn_vehicles(self, num, start_point:carla.Waypoint):
-        fwv = self.ego_vehicle.get_transform().get_forward_vector()
-        tm = self.client.get_trafficmanager()
-        bp_lib = self.world.get_blueprint_library()
-        vehicles = bp_lib.filter("vehicle.*")
-        return_vechicles = []
-        n=0
-        while n < num:
-            wp: carla.Waypoint = start_point
-            if wp.lane_change == carla.LaneChange.NONE:
-                # No lane change, so spawn vehicles in the same lane
-                location = wp.next(random.uniform(5,20))[0].transform.location
-                location.z += 0.2
-                transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
-                v = random.choice(vehicles)
-                while v.id == "vehicle.nissan.patrol":
-                    v = random.choice(vehicles)
-                v.set_attribute('role_name', 'autopilot')
-                v_tmp = self.world.try_spawn_actor(v, transform)
-                if v_tmp is not None:
-                    v_tmp.set_autopilot(True)
-                    return_vechicles.append(v_tmp)
-                    n+=1
-            else:
-                # Lane change is possible, so randomly choose to change lane or not
-                if random.random() < 0.5:
-                    # Change lane
-                    if wp.lane_change == carla.LaneChange.Left:
-                        wp = wp.get_left_lane()
-                    elif wp.lane_change == carla.LaneChange.Right:
-                        wp = wp.get_right_lane()
-                # Spawn vehicle in the chosen lane
-                location = wp.next(random.uniform(5,20))[0].transform.location
-                location.z += 0.2
-                transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
-                v = random.choice(vehicles)
-                while v.id == "vehicle.nissan.patrol":
-                    v = random.choice(vehicles)
-                v.set_attribute('role_name', 'autopilot')
-                v_tmp = self.world.try_spawn_actor(v, transform)
-                if v_tmp is not None:
-                    v_tmp.set_autopilot(True)
-                    return_vechicles.append(v_tmp)
-                    n+=1
-        return return_vechicles
-
     def handle_semantic_tag(self):
         if self.tick == self.target_tick:
             # lane.id is a value that identify the lane. If we have four lanes, as in MAP 10, the lane id will be:
@@ -1167,56 +1173,6 @@ class DangerDriver_Anomaly(Anomaly):
                 coll_event.other_actor.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
                 coll_event.other_actor.set_actor_semantic_tag("static_anomaly")
 
-
-    def spawn_vehicles(self, num, start_point:carla.Waypoint):
-        fwv = self.ego_vehicle.get_transform().get_forward_vector()
-        tm = self.client.get_trafficmanager()
-        bp_lib = self.world.get_blueprint_library()
-        vehicles = bp_lib.filter("vehicle.*")
-        return_vechicles = []
-        n=0
-        trial = 0
-        while n < num:
-            if trial > 15:
-                break
-            trial += 1
-            wp: carla.Waypoint = start_point
-            if wp.lane_change == carla.LaneChange.NONE:
-                # No lane change, so spawn vehicles in the same lane
-                location = wp.next(random.uniform(10,20))[0].transform.location
-                location.z += 0.2
-                transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
-                v = random.choice(vehicles)
-                while v.id == "vehicle.nissan.patrol":
-                    v = random.choice(vehicles)
-                v.set_attribute('role_name', 'autopilot')
-                v_tmp = self.world.try_spawn_actor(v, transform)
-                if v_tmp is not None:
-                    v_tmp.set_autopilot(True)
-                    return_vechicles.append(v_tmp)
-                    n+=1
-            else:
-                # Lane change is possible, so randomly choose to change lane or not
-                if random.random() < 0.5:
-                    # Change lane
-                    if wp.lane_change == carla.LaneChange.Left:
-                        wp = wp.get_left_lane()
-                    elif wp.lane_change == carla.LaneChange.Right:
-                        wp = wp.get_right_lane()
-                # Spawn vehicle in the chosen lane
-                location = wp.next(random.uniform(10,20))[0].transform.location
-                location.z += 0.2
-                transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
-                v = random.choice(vehicles)
-                while v.id == "vehicle.nissan.patrol":
-                    v = random.choice(vehicles)
-                v.set_attribute('role_name', 'autopilot')
-                v_tmp = self.world.try_spawn_actor(v, transform)
-                if v_tmp is not None:
-                    v_tmp.set_autopilot(True)
-                    return_vechicles.append(v_tmp)
-                    n+=1
-        return return_vechicles
 
     def spawn_anomaly(self):
         self.tm = self.client.get_trafficmanager()
@@ -1704,6 +1660,18 @@ class FallenTree_Anomaly(Anomaly):
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
         self.world.tick()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Oven_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
         self.anomaly.set_actor_semantic_tag("static_anomaly")
         return self.anomaly
     def on_destroy(self):

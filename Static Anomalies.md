@@ -54,7 +54,7 @@ You can modify this method to spawn the anomaly in a different way if needed. Th
 ## Currently Implemented Static Anomalies
 Here's a list of the already implemented static anomalies in Carla Simulator. For each anomaly there is a brief description of its spawn method/parameters, 
 the handle_semantic_tag method (that in case of static anomalies is usually empty) and a picture.
-The total number of static anomalies up to now is 49.
+The total number of static anomalies up to now is 58.
 
 | Anomaly             | Spawn Method/Parameters                                                                                                                                                                                           | Handle Semantic Tag | Picture                                                |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------|--------------------------------------------------------|
@@ -115,3 +115,4 @@ The total number of static anomalies up to now is 49.
 | Rake                | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![Rake](Images/rake.png)                               |
 | Delivery Box        | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![DeliveryBox](Images/deliverybox.png)                 |
 | Fallen Tree         | Takes a tree (if exists) in front of the ego vehicle and change is position to make it look fallen. This is handled at blueprint level by setting the pitch to 90 or -90 degrees. Yaw is randomized               | Empty               | ![FallenTree](Images/fallentree.png)                   |
+| Oven                | Spawns on the right of the ego vehicle, can be rotated                                                                                                                                                            | Empty               | ![Oven](Images/oven.png)                               |

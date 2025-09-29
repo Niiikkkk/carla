@@ -273,8 +273,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return RoadSignTwisted_Anomaly(world, client, name, ego_vehicle)
     if name == "roadsignvandalized":
         return RoadSignVandalized_Anomaly(world, client, name, ego_vehicle)
-    if name == "motorcycle":
-        return Motorcycle_Anomaly(world, client, name, ego_vehicle)
+    # if name == "motorcycle":
+    #     return Motorcycle_Anomaly(world, client, name, ego_vehicle)
     if name == "garbagebag":
         return GarbageBag_Anomaly(world, client, name, ego_vehicle)
     if name == "garbagebagwind":
@@ -331,8 +331,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return FuelCan_Anomaly(world, client, name, ego_vehicle)
     if name == "constructionbarrier":
         return ConstructionBarrier_Anomaly(world, client, name, ego_vehicle)
-    if name == "constructionsite":
-        return ConstructionSite_Anomaly(world, client, name, ego_vehicle)
+    # if name == "constructionsite":
+    #     return ConstructionSite_Anomaly(world, client, name, ego_vehicle)
     if name == "suitcase":
         return Suitcase_Anomaly(world, client, name, ego_vehicle)
     if name == "carmirror":
@@ -381,6 +381,8 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return DeliveryBox_Anomaly(world, client, name, ego_vehicle)
     if name == "fallentree":
         return FallenTree_Anomaly(world, client, name, ego_vehicle)
+    if name == "oven":
+        return Oven_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

@@ -587,7 +587,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     anomaly_tmp = world.spawn_actor(anomaly, carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0)))
     if not spawn_at_zero:
         while True:
-            distance = random.uniform(10,20)
+            distance = random.uniform(10,30)
             # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
             if not is_dynamic:
                 right_left = random.uniform(-6,6)
@@ -598,6 +598,11 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
                 right_left = random.uniform(3,5)
             distance_vector = right_left*right_vector + distance*forward_vector
             location = ego_vehicle.get_transform().location + distance_vector
+            if spawn_on_right:
+                # LaneType.Shoulder is the right side of the road (like parking), LaneType.Sidewalk is the sidewalk
+                wp = map.get_waypoint(location, lane_type=carla.LaneType.Shoulder)
+                location.x = wp.transform.location.x
+                location.y = wp.transform.location.y
 
             extent = anomaly_tmp.bounding_box.extent
             #The extent is half the size of the bounding box, so we need to multiply by 2 to get the full size
@@ -613,10 +618,13 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
             if extent.x < 0.2 or extent.y < 0.2:
                 step_size = 0.05
             else:
-                step_size = 0.2
+                step_size = 0.1
             points_x = extent.x * 2 / step_size
             points_y = extent.y * 2 / step_size
             is_valid = True
+            # We add a small margin to the extent to avoid issues with the bounding box colliding ad edges with other bounding boxes
+            extent.x += 0.15
+            extent.y += 0.15
             #If we have one on this below, we are good to go. NONE means no label, so is fine too (for example a box collision has NONE label)
             valid_labels = [carla.CityObjectLabel.Roads, carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
                             carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain, carla.CityObjectLabel.NONE]
