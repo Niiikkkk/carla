@@ -43,7 +43,7 @@ found, the ray should hit the ground). The final z location is computed as:
 final_z = original_location.z - (min_vertex_extent_z - ground_z) + 0.15
 ```
 The 0.15 is added to avoid spawning the anomaly too close to the ground.
-Where `hit_location` is the location where the ray hit the ground, `anomaly_bb.extent.z` is half the height of the bounding box and `min_vertex.z` is the minimum z vertex of the bounding box.
+
 You can modify this method to spawn the anomaly in a different way if needed. There are five parameters:
   - is_dynamic: used for dynamic anomalies
   - is_character: used for character anomalies
@@ -54,7 +54,7 @@ You can modify this method to spawn the anomaly in a different way if needed. Th
 ## Currently Implemented Static Anomalies
 Here's a list of the already implemented static anomalies in Carla Simulator. For each anomaly there is a brief description of its spawn method/parameters, 
 the handle_semantic_tag method (that in case of static anomalies is usually empty) and a picture.
-The total number of static anomalies up to now is 48.
+The total number of static anomalies up to now is 49.
 
 | Anomaly             | Spawn Method/Parameters                                                                                                                                                                                           | Handle Semantic Tag | Picture                                                |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------|--------------------------------------------------------|
@@ -106,3 +106,4 @@ The total number of static anomalies up to now is 48.
 | Tablet              | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![Tablet](Images/tablet.png)                           |
 | Smartphone          | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![Smartphone](Images/smartphone.png)                   |
 | Laptop              | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![Laptop](Images/laptop.png)                           |
+| Beer Bottle         | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![Beer](Images/beerbottle.png)                         |

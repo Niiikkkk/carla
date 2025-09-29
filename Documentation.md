@@ -263,9 +263,30 @@ The sensors are spawned in the world and attached to the ego vehicle:
   - `handle(self, data)`: Saves the image received from the camera to the `output/rgb` folder.
 
 
-How to
-List anomalies (stati-dynamic)
-package build
+How to 
+List anomalies (stati-dynamic) DONE
+package build DONE
 time to exec
 pothole
 test sensors
+
+
+## Time to Execute
+Time for execution the simulation with all sensors attached:
+
+| Anomaly Distance | Fps | Total Time (s) |
+|------------------|-----|----------------|
+
+
+
+
+## Potholes
+In order to add potholes in the simulation, we have to modify the mesh of the read in Blender.
+1. Extract the mesh of the road and the collision mesh of the same road in .fbx format (Make sure that the mesh has Nanite disabled, otherwise
+it is optimized and the vertices won't be extracted correctly)
+2. Import the road meshes in Blender 
+3. Add the potholes, by modifying the mesh and the collision mesh.
+4. Export the meshes in .fbx format
+5. Import them into Unreal Engine
+6. Open the road mesh and set the complex collision mesh as the collision mesh 
+7. Also set Collision Complexity to Use Complex Collision as Simple
