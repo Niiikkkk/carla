@@ -55,7 +55,6 @@ class Anomaly:
                     v.set_attribute('role_name', 'autopilot')
                     v_tmp = self.world.try_spawn_actor(v, transform)
                     if v_tmp is not None:
-                        v_tmp.set_autopilot(True)
                         return_vechicles.append(v_tmp)
                         n += 1
                 else:
@@ -76,7 +75,6 @@ class Anomaly:
                     v.set_attribute('role_name', 'autopilot')
                     v_tmp = self.world.try_spawn_actor(v, transform)
                     if v_tmp is not None:
-                        v_tmp.set_autopilot(True)
                         return_vechicles.append(v_tmp)
                         n += 1
             return return_vechicles
@@ -353,10 +351,7 @@ class TrafficLight_Anomaly(Anomaly):
         super().__init__(world, client, name, ego_vehicle, True, False, False, True)
 
     def handle_semantic_tag(self):
-        current_rotation = self.anomaly.get_transform().rotation
-        # pitch is the x axis rotation, roll is the y axis rotation
-        if abs(current_rotation.pitch) > 10 or abs(current_rotation.roll) > 10:
-            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+        pass
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
@@ -422,10 +417,18 @@ class InstantCarBreak_Anomaly(Anomaly):
         if len(vehicles) < 2:
             print("InstantCarBreak -> No vehicle found in front of the ego vehicle to attach the anomaly to. Spawning some vehicles...")
             spawned = self.spawn_vehicles(2-len(vehicles), self.map.get_waypoint(self.ego_vehicle.get_location()))
+            self.world.tick()
             if len(spawned) == 0:
                 print("InstantCarBreak -> Failed to spawn vehicles in front of the ego vehicle.")
                 return None
-        vehicle_to_attach = vehicles[0]
+        vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=2, max_distance=30, angle=0.9)
+        filtered_vehicles = list(
+            filter(lambda v: v.get_transform().get_forward_vector().dot(
+                self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
+                   vehicles))
+        print(filtered_vehicles)
+        filtered_vehicles.sort(key=lambda v: v.get_location().distance(self.ego_vehicle.get_location()))
+        vehicle_to_attach = filtered_vehicles[0]
         print("InstantCarBreak -> Found vehicle to attach the anomaly to:", vehicle_to_attach)
         bp_lib: carla.BlueprintLibrary = self.world.get_blueprint_library()
         anomaly_to_spawn = bp_lib.filter(f"*{self.name}")[0]
@@ -1033,7 +1036,6 @@ class Crash_Anomaly(Anomaly):
         self.wp_other_v = None
         self.tm:carla.TrafficManager = None
         self.target_tick = random.randint(30,50)
-        self.world.debug.draw_arrow(carla.Location(0,0,0), self.ego_vehicle.get_location(), 0.1, 0.1, carla.Color(255,0,0), 5)
 
     def handle_semantic_tag(self):
         if self.tick == self.target_tick:
@@ -1056,6 +1058,7 @@ class Crash_Anomaly(Anomaly):
 
         if len(self.coll_queue) != 0 :
             coll_event: carla.CollisionEvent = self.coll_queue.pop()
+            print(coll_event)
             # The collision event is triggered when the target vehicle collides with something
             # So we stop both the vehicles and set them as dynamic anomaly
             coll_event.actor.set_autopilot(False)
@@ -1083,9 +1086,10 @@ class Crash_Anomaly(Anomaly):
                 filter(lambda v: v.get_transform().get_forward_vector().dot(
                     self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
                        vehicles))
-            filtered_vehicles.sort(key = lambda v: v.get_location().distance(self.ego_vehicle.get_location()))
+        filtered_vehicles.sort(key = lambda v: v.get_location().distance(self.ego_vehicle.get_location()))
         #The vehicle in position 0 will be the closest to the ego vehicle
         self.target_v = filtered_vehicles[0]
+        print("Target vehicle for Crash_Anomaly:", self.target_v)
         self.tm:carla.TrafficManager = self.client.get_trafficmanager()
         #Now self.target_v will ignore alle the other vehicles
         self.tm.ignore_vehicles_percentage(self.target_v,100)
@@ -1093,12 +1097,12 @@ class Crash_Anomaly(Anomaly):
         for v in filtered_vehicles[1:]:
             self.tm.collision_detection(v, self.target_v, False)
 
-        # E POI FARE IN MODO CHE TARGET V TOCCHI UN ALTRO VEICOLO
         self.other_v = filtered_vehicles[1]
         self.wp_other_v:carla.Waypoint = self.world.get_map().get_waypoint(self.other_v.get_location(), project_to_road=True, lane_type=carla.LaneType.Driving)
         self.wp_target_v : carla.Waypoint = self.world.get_map().get_waypoint(self.target_v.get_location(), project_to_road=True, lane_type=carla.LaneType.Driving)
         print("Target vehicle:", self.target_v, " in lane:", self.wp_other_v.lane_id, " at location:", self.target_v.get_location())
         print("Other vehicle:", self.other_v, " in lane:", self.wp_target_v.lane_id, " at location:", self.other_v.get_location())
+
 
         self.coll_sen: carla.Sensor = attach_collision_sensor(None, self.world, self.client, self.target_v)
         self.coll_queue = deque(maxlen=1)
@@ -1156,7 +1160,6 @@ class DangerDriver_Anomaly(Anomaly):
         # Make the target vehicle change lane very often
         if random.random() < 0.2:
             wp = self.world.get_map().get_waypoint(self.target_vehicle.get_location(), project_to_road=True, lane_type=carla.LaneType.Driving)
-            print(self.target_vehicle.get_location())
             if wp.lane_change == carla.LaneChange.Left:
                 self.tm.force_lane_change(self.target_vehicle, False)
             elif wp.lane_change == carla.LaneChange.Right:
@@ -1183,7 +1186,6 @@ class DangerDriver_Anomaly(Anomaly):
             filter(lambda v: v.get_transform().get_forward_vector().dot(
                 self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
                    vehicles))
-        print(filtered_vehicles)
         if len(filtered_vehicles) < 3:
             print("DangerDriver -> No vehicle found in front of the ego vehicle to attach the anomaly to. Spawning one vehicle...")
             spawned_vehicles = self.spawn_vehicles(3-len(filtered_vehicles),self.world.get_map().get_waypoint(self.ego_vehicle.get_location()))
@@ -1217,7 +1219,7 @@ class DangerDriver_Anomaly(Anomaly):
         # tm.random_left_lanechange_percentage(self.target_vehicle, 80)
         # tm.random_right_lanechange_percentage(self.target_vehicle, 80)
         # Make the target vehicle ignore other vehicles 60% of the time
-        tm.ignore_vehicles_percentage(self.target_vehicle,60)
+        tm.ignore_vehicles_percentage(self.target_vehicle,80)
 
         self.target_vehicle.set_actor_semantic_tag("dynamic_anomaly")
 
@@ -1668,6 +1670,66 @@ class FallenTree_Anomaly(Anomaly):
 class Oven_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
         super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class WheelChair_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Shoe_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Glove_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Hammer_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Wrench_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):

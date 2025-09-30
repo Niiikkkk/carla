@@ -92,8 +92,9 @@ def main(args):
             set_up_sensors(args, client, ego_vehicle, sensors, world)
 
             #set autopilot for the vehicles and start the simulation
-            for vehicle_id in all_vehicles:
-                world.get_actor(vehicle_id).set_autopilot(True)
+            vehicles_in_world = world.get_actors().filter("*vehicle*")
+            for vehicle in vehicles_in_world:
+                vehicle.set_autopilot(True)
 
             #With a for, it runs N times the simulation
             # 0.05 is the simulation run for each tick.
@@ -383,6 +384,16 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return FallenTree_Anomaly(world, client, name, ego_vehicle)
     if name == "oven":
         return Oven_Anomaly(world, client, name, ego_vehicle)
+    if name == "wheelchair":
+        return WheelChair_Anomaly(world, client, name, ego_vehicle)
+    if name == "shoe":
+        return Shoe_Anomaly(world, client, name, ego_vehicle)
+    if name == "glove":
+        return Glove_Anomaly(world, client, name, ego_vehicle)
+    if name == "hammer":
+        return Hammer_Anomaly(world, client, name, ego_vehicle)
+    if name == "wrench":
+        return Wrench_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
