@@ -44,7 +44,8 @@ def benchmark():
         "laptop", "smartphone", "television", "scooter",
         "washingmachine", "fridge", "pilesand", "shovel", "rake", "deliverybox", "fallentree", "oven",
         "wheelchair", "hammer", "wrench", "shoe", "glove",
-        # "drill", "saw", "sunglasses", "bikes", "flippedcar"
+        "drill", "saw", "sunglasses", "bikes", "flippedcar",
+        "wallet", "coffecup", "fence", "pizzabox", "toycar", "remotecontrol", "cd", "powerbank", "deodorant", "lighter"
     ]
 
     print("Total Static Anomalies: ", len(list_static_anomalies))
@@ -57,6 +58,7 @@ def benchmark():
 
     print("Total Dynamic Anomalies: ", len(list_dynamic_anomalies))
     print("Total Anomalies: ", len(list_static_anomalies) + len(list_dynamic_anomalies))
+    return
 
     args.semantic = True
     args.rgb = True

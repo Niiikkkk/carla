@@ -263,12 +263,12 @@ The sensors are spawned in the world and attached to the ego vehicle:
   - `handle(self, data)`: Saves the image received from the camera to the `output/rgb` folder.
 
 
-How to 
+How to  DONE
 List anomalies (stati-dynamic) DONE
 package build DONE
-time to exec
-pothole
-test sensors
+time to exec DONE
+pothole ?
+test sensors DONE
 
 
 ## Time to Execute
