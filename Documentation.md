@@ -273,6 +273,7 @@ test sensors DONE
 
 ## Time to Execute
 Time for execution the simulation with all sensors attached with 10 vehicles and 10 pedestrians, with different FPS and sensor tick at the anomaly distance of 10m and 30m, with and without hybrid mode.:
+TEST DONE ON A 800x600 RESOLUTION
 
 | Anomaly Distance | Hybrid | Fps | Sensor Tick | Total Time (s) |
 |------------------|--------|-----|-------------|----------------|
