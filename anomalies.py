@@ -1738,3 +1738,160 @@ class Wrench_Anomaly(Anomaly):
         return self.anomaly
     def on_destroy(self):
         super().on_destroy()
+
+class Drill_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Saw_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Sunglasses_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Wallet_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class CoffeeCup_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Fence_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.world.tick()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class PizzaBox_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class ToyCar_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class RemoteControl_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class CD_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class PowerBank_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Deodorant_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()
+
+class Lighter_Anomaly(Anomaly):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def handle_semantic_tag(self):
+        pass
+    def spawn_anomaly(self):
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_actor_semantic_tag("static_anomaly")
+        return self.anomaly
+    def on_destroy(self):
+        super().on_destroy()

@@ -311,7 +311,6 @@ def attach_radar(args, world,client,ego_vehicle):
         sensor (carla.Sensor): The radar sensor object.
     """
     # Get the blueprint library
-    print(ego_vehicle)
     radar_bp = world.get_blueprint_library().find("sensor.other.radar")
     radar_bp.set_attribute("horizontal_fov", '30')
     radar_bp.set_attribute("vertical_fov", '30')
@@ -441,12 +440,12 @@ def save_lidar(lidar_measurements,anomaly_name,run):
     pcd.points = o3d.utility.Vector3dVector(tmp)
     pcd.colors = o3d.utility.Vector3dVector(int_color)
     # crete the direcotry if it does not exist
-    if not os.path.exists("output/lidar"):
-        os.makedirs("output/lidar")
+    if not os.path.exists("output/lidar/"+str(run)):
+        os.makedirs("output/lidar/"+str(run))
     if anomaly_name is not None:
-        o3d.io.write_point_cloud(f"output/lidar/"+anomaly_name+str(run)+f"_lidar-{lidar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/lidar/"+str(run)+"/"+anomaly_name+f"_lidar-{lidar_measurements.frame}.ply", pcd)
     else:
-        o3d.io.write_point_cloud(f"output/lidar/normal_" + str(run) + f"_lidar-{lidar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/lidar/"+str(run)+"/normal_" + f"_lidar-{lidar_measurements.frame}.ply", pcd)
 
 def save_semantic_lidar(lidar_measurements,anomaly_name,run):
     """Save the Semantic LIDAR measurements.
@@ -509,12 +508,12 @@ def save_semantic_lidar(lidar_measurements,anomaly_name,run):
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.colors = o3d.utility.Vector3dVector(int_color)
     # crete the direcotry if it does not exist
-    if not os.path.exists("output/semantic_lidar"):
-        os.makedirs("output/semantic_lidar")
+    if not os.path.exists("output/semantic_lidar/"+str(run)):
+        os.makedirs("output/semantic_lidar/"+str(run))
     if anomaly_name is not None:
-        o3d.io.write_point_cloud(f"output/semantic_lidar/"+anomaly_name+str(run)+f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/semantic_lidar/"+str(run)+"/"+anomaly_name+f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
     else:
-        o3d.io.write_point_cloud(f"output/semantic_lidar/normal_" + str(run) + f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/semantic_lidar/"+str(run)+"/normal_" + f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
 
 def save_radar(radar_measurements,anomaly_name,run):
     """Save the radar measurements.
@@ -548,12 +547,12 @@ def save_radar(radar_measurements,anomaly_name,run):
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.colors = o3d.utility.Vector3dVector(int_color)
     # crete the direcotry if it does not exist
-    if not os.path.exists("output/radar"):
-        os.makedirs("output/radar")
+    if not os.path.exists("output/radar/"+str(run)):
+        os.makedirs("output/radar/"+str(run))
     if anomaly_name:
-        o3d.io.write_point_cloud(f"output/radar/"+anomaly_name+str(run)+f"_radar-{radar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/radar/"+str(run)+"/"+anomaly_name+str(run)+f"_radar-{radar_measurements.frame}.ply", pcd)
     else:
-        o3d.io.write_point_cloud(f"output/radar/normal_" + str(run) + f"_radar-{radar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/radar/"+str(run)+"/normal_" + str(run) + f"_radar-{radar_measurements.frame}.ply", pcd)
 
 def view_lidar(lidar_name):
     """View the LIDAR measurements.

@@ -272,10 +272,34 @@ test sensors
 
 
 ## Time to Execute
-Time for execution the simulation with all sensors attached:
+Time for execution the simulation with all sensors attached with 10 vehicles and 10 pedestrians, with different FPS and sensor tick at the anomaly distance of 10m and 30m, with and without hybrid mode.:
 
-| Anomaly Distance | Fps | Total Time (s) |
-|------------------|-----|----------------|
+| Anomaly Distance | Hybrid | Fps | Sensor Tick | Total Time (s) |
+|------------------|--------|-----|-------------|----------------|
+| 10m              | False  | 20  | 0.1         | 62.23          |
+| 10m              | False  | 20  | 0.05        | 103.98         |
+| 10m              | False  | 30  | 0.035       | 141.82         |
+| 10m              | False  | 40  | 0.025       | 207.51         |
+| 10m              | False  | 50  | 0.02        | 270.51         |
+| 10m              | False  | 60  | 0.017       | 293.51         |
+| 10m              | True   | 20  | 0.1         | 62.76          |
+| 10m              | True   | 20  | 0.05        | 106.38         |
+| 10m              | True   | 30  | 0.035       | 143.53         |
+| 10m              | True   | 40  | 0.025       | 199.65         |
+| 10m              | True   | 50  | 0.02        | 265.01         |
+| 10m              | True   | 60  | 0.017       | 300.44         |
+| 30m              | False  | 20  | 0.1         | 117.05         |
+| 30m              | False  | 20  | 0.05        | 189.41         |
+| 30m              | False  | 30  | 0.035       | 274.15         |
+| 30m              | False  | 40  | 0.025       | 371.60         |
+| 30m              | False  | 50  | 0.02        | 475.94         |
+| 30m              | False  | 60  | 0.017       | 556.36         |
+| 30m              | True   | 20  | 0.1         | 110.07         |
+| 30m              | True   | 20  | 0.05        | 187.43         |
+| 30m              | True   | 30  | 0.035       | 263.19         |
+| 30m              | True   | 40  | 0.025       | 370.09         |
+| 30m              | True   | 50  | 0.02        | 466.16         |
+| 30m              | True   | 60  | 0.017       | 530.98         |
 
 
 

@@ -1,9 +1,5 @@
 import argparse
-from typing import Union
 
-from anomalies import Anomaly
-from utils import *
-from collections import deque
 from sensors import *
 from anomalies import *
 
@@ -18,12 +14,12 @@ def main(args):
     random.seed(args.seed)
     tm.set_random_device_seed(args.seed)
 
-    # In hybrid mode, the physics engine is used only for the vehicles that are in a radious of 20 meters, this is
+    # In hybrid mode, the physics engine is used only for the vehicles that are in a radious of 50 meters, this is
     # useful for computational efficiency
     if args.hybrid:
         print("Activating hybrid mode")
         tm.set_hybrid_physics_mode(True)
-        tm.set_hybrid_physics_radius(20)
+        tm.set_hybrid_physics_radius(50)
     simulation_time_for_tick = 1/args.fps
     set_sync_mode(world,client,simulation_time_for_tick)
 
@@ -394,6 +390,32 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Hammer_Anomaly(world, client, name, ego_vehicle)
     if name == "wrench":
         return Wrench_Anomaly(world, client, name, ego_vehicle)
+    if name == "drill":
+        return Drill_Anomaly(world, client, name, ego_vehicle)
+    if name == "saw":
+        return Saw_Anomaly(world, client, name, ego_vehicle)
+    if name == "sunglasses":
+        return Sunglasses_Anomaly(world, client, name, ego_vehicle)
+    if name == "wallet":
+        return Wallet_Anomaly(world, client, name, ego_vehicle)
+    if name == "coffecup":
+        return CoffeeCup_Anomaly(world, client, name, ego_vehicle)
+    if name == "fence":
+        return Fence_Anomaly(world, client, name, ego_vehicle)
+    if name == "pizzabox":
+        return PizzaBox_Anomaly(world, client, name, ego_vehicle)
+    if name == "toycar":
+        return ToyCar_Anomaly(world, client, name, ego_vehicle)
+    if name == "remotecontrol":
+        return RemoteControl_Anomaly(world, client, name, ego_vehicle)
+    if name == "cd":
+        return CD_Anomaly(world, client, name, ego_vehicle)
+    if name == "powerbank":
+        return PowerBank_Anomaly(world, client, name, ego_vehicle)
+    if name == "deodorant":
+        return Deodorant_Anomaly(world, client, name, ego_vehicle)
+    if name == "lighter":
+        return Lighter_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 

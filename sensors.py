@@ -12,6 +12,7 @@ class Sensor:
     def handle(self, data, anomaly):
         """
         Handle the sensor data. This method should be overridden by subclasses.
+        :param sensor_tick:
         :param data: The data to handle.
         :param anomaly: The anomaly name.
         """
@@ -54,6 +55,7 @@ class RGB_Sensor(Sensor):
     def handle(self, run, anomaly=None):
         """
         Handle the RGB sensor data.
+        :param sensor_tick:
         :param run: The current run number.
         :param anomaly: The anomaly name.
         """
@@ -62,9 +64,9 @@ class RGB_Sensor(Sensor):
         if len(self.queue) != 0:
             cam_data: carla.Image = self.queue.pop()
             if anomaly_name:
-                cam_data.save_to_disk('output/rgb/' + anomaly_name + str(run) + '_%06d' % cam_data.frame)
+                cam_data.save_to_disk('output/rgb/'+ str(run) + "/" + anomaly_name  + '_%06d' % cam_data.frame)
             else:
-                cam_data.save_to_disk('output/rgb/normal_' + str(run) + '_%06d' % cam_data.frame)
+                cam_data.save_to_disk('output/rgb/'+ str(run) + '/normal_' + '_%06d' % cam_data.frame)
 
 class Lidar_Sensor(Sensor):
     """
@@ -116,14 +118,14 @@ class Semantic_Sensor(Sensor):
             semantic_data: carla.Image = self.queue.pop()
             if anomaly_name:
                 semantic_data.save_to_disk(
-                    'output/semantic/original/' + anomaly_name + str(run) + '_%06d' % semantic_data.frame)
+                    'output/semantic/original/' + str(run) + "/" + anomaly_name +  '_%06d' % semantic_data.frame)
                 semantic_data.save_to_disk(
-                    f'output/semantic/converted/' + anomaly_name + str(run) + f'_{semantic_data.frame}',
+                    f'output/semantic/converted/' + str(run) + "/" + anomaly_name + f'_{semantic_data.frame}',
                     carla.ColorConverter.CityScapesPalette)
             else:
                 semantic_data.save_to_disk(
-                    'output/semantic/original/normal_' + str(run) + '_%06d' % semantic_data.frame)
-                semantic_data.save_to_disk(f'output/semantic/converted/normal_' + str(run) + f'_{semantic_data.frame}',
+                    'output/semantic/converted/' + str(run) + '/normal_'  + '_%06d' % semantic_data.frame)
+                semantic_data.save_to_disk(f'output/semantic/converted/' + str(run) + '/normal_'  + f'_{semantic_data.frame}',
                                            carla.ColorConverter.CityScapesPalette)
 
 class Semantic_Lidar_Sensor(Sensor):
@@ -201,18 +203,18 @@ class Depth_Sensor(Sensor):
             depth_data: carla.Image = self.queue.pop()
             if anomaly_name:
                 depth_data.save_to_disk(
-                    'output/depth/original/' + anomaly_name + str(run) + '_%06d' % depth_data.frame)
+                    'output/depth/original/' + str(run) + "/" + anomaly_name  + '_%06d' % depth_data.frame)
                 depth_data.save_to_disk(
-                    'output/depth/depth/' + anomaly_name + str(run) + '_%06d' % depth_data.frame,
+                    'output/depth/depth/' + str(run) + "/" + anomaly_name  + '_%06d' % depth_data.frame,
                     carla.ColorConverter.Depth)
                 depth_data.save_to_disk(
-                    'output/depth/logaritmic/' + anomaly_name + str(run) + '_%06d' % depth_data.frame,
+                    'output/depth/logaritmic/' + str(run) + "/" + anomaly_name  + '_%06d' % depth_data.frame,
                     carla.ColorConverter.LogarithmicDepth)
             else:
-                depth_data.save_to_disk('output/depth/original/normal_' + str(run) + '_%06d' % depth_data.frame)
-                depth_data.save_to_disk('output/depth/depth/normal_' + str(run) + '_%06d' % depth_data.frame,
+                depth_data.save_to_disk('output/depth/original/' + str(run) + '/normal_' + '_%06d' % depth_data.frame)
+                depth_data.save_to_disk('output/depth/depth/' + str(run) + '/normal_' + '_%06d' % depth_data.frame,
                                         carla.ColorConverter.Depth)
-                depth_data.save_to_disk('output/depth/logaritmic/normal_' + str(run) + '_%06d' % depth_data.frame,
+                depth_data.save_to_disk('output/depth/logaritmic/' + str(run) + '/normal_'  + '_%06d' % depth_data.frame,
                                         carla.ColorConverter.LogarithmicDepth)
 
 class Instant_Segmentation_Sensor(Sensor):
@@ -240,9 +242,9 @@ class Instant_Segmentation_Sensor(Sensor):
             instance_data: carla.Image = self.queue.pop()
             if anomaly_name:
                 instance_data.save_to_disk(
-                    'output/instance/' +anomaly_name + str(run) + '_%06d' % instance_data.frame)
+                    'output/instance/' + str(run) + "/" +anomaly_name  + '_%06d' % instance_data.frame)
             else:
-                instance_data.save_to_disk('output/instance/normal_' + str(run) + '_%06d' % instance_data.frame)
+                instance_data.save_to_disk('output/instance/' + str(run) + '/normal_'  + '_%06d' % instance_data.frame)
 
 class Collision_Sensor(Sensor):
     """
