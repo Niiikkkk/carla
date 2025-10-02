@@ -45,7 +45,8 @@ def benchmark():
         "washingmachine", "fridge", "pilesand", "shovel", "rake", "deliverybox", "fallentree", "oven",
         "wheelchair", "hammer", "wrench", "shoe", "glove",
         "drill", "saw", "sunglasses", "bikes", "flippedcar",
-        "wallet", "coffecup", "fence", "pizzabox", "toycar", "remotecontrol", "cd", "powerbank", "deodorant", "lighter"
+        "wallet", "coffecup", "fence", "pizzabox", "toycar", "remotecontrol", "cd", "powerbank", "deodorant", "lighter",
+        "bowl", "bucket", "speaker"
     ]
 
     print("Total Static Anomalies: ", len(list_static_anomalies))

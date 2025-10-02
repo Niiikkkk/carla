@@ -577,7 +577,11 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     # Now add the distance to the vehicle's location to get the new location, the distance will be based on the vehicle's forward vector
 
     bp_lib: carla.BlueprintLibrary = world.get_blueprint_library()
-    anomalies = bp_lib.filter(f"blueprint.{prop}")
+    # There's the flipped car anomaly that spawns a vehicle.*
+    if prop.startswith("vehicle."):
+        anomalies = bp_lib.filter(f"{prop}")
+    else:
+        anomalies = bp_lib.filter(f"blueprint.{prop}")
     if len(anomalies) == 0:
         print(f"Anomaly {prop} not found.")
         return None

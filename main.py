@@ -416,6 +416,12 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Deodorant_Anomaly(world, client, name, ego_vehicle)
     if name == "lighter":
         return Lighter_Anomaly(world, client, name, ego_vehicle)
+    if name == "bowl":
+        return Bowl_Anomaly(world, client, name, ego_vehicle)
+    if name == "bucket":
+        return Bucket_Anomaly(world, client, name, ego_vehicle)
+    if name == "speaker":
+        return Speaker_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
