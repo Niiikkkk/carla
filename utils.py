@@ -113,7 +113,10 @@ def spawn_ego_vehicle(world,client,args):
 
     # Get the vehicle blueprints and spawn points
     vehicle_blueprints = blueprint_library.filter("*mustang*")
-    spawn_points = world.get_map().get_spawn_points()
+    if args.spawn_points is not None:
+        spawn_points = args.spawn_points
+    else:
+        spawn_points = world.get_map().get_spawn_points()
     # Choose a random vehicle blueprint and spawn point
     vehicle_blueprint:carla.ActorBlueprint = random.choice(vehicle_blueprints)
     vehicle_blueprint.set_attribute("role_name", "hero")
@@ -587,8 +590,8 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         return None
     anomaly: carla.ActorBlueprint = anomalies[0]
 
-    anomaly_tmp = world.spawn_actor(anomaly, carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0)))
     if not spawn_at_zero:
+        anomaly_tmp = world.spawn_actor(anomaly, carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0)))
         while True:
             distance = random.uniform(10,30)
             # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
@@ -665,29 +668,30 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         # If is a char, 1 is ok
         transform.location.z = 1
     else:
-        #Otherwise compute the z coordinate based on the bounding box of the object
-        transform.location.z = 10
-        # We set z = 10, but is too high, so we need to adjust it to be on the ground
-        # We use the bounding box to get the lowest point of the object, and we use the ground projection to get the ground level
-        # Then we adjust the z coordinate of the object
+        if not spawn_at_zero:
+            #Otherwise compute the z coordinate based on the bounding box of the object
+            transform.location.z = 10
+            # We set z = 10, but is too high, so we need to adjust it to be on the ground
+            # We use the bounding box to get the lowest point of the object, and we use the ground projection to get the ground level
+            # Then we adjust the z coordinate of the object
 
-        # Get the ground level of our location, from this we will get the z coordinate
-        valid_labels = [carla.CityObjectLabel.Roads, carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
-                        carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain]
-        points = world.cast_ray(transform.location, transform.location - carla.Location(z=15))
-        #filter the point, keeping only the ones that are in valid_labels
-        points = [point for point in points if point.label in valid_labels]
-        street = points[-1]
-        ground_z = street.location.z
-        # Get the verteces of the bounding box and get the lowest z coordinate
-        vertices = anomaly_tmp.bounding_box.get_world_vertices(transform)
-        min_z = min([vertex.z for vertex in vertices])
-        print(prop, ground_z , min_z)
-        # Calculate the difference between the lowest point of the object and the ground level
-        diff = min_z - ground_z
-        # Adjust the z coordinate of the object
-        transform.location.z = transform.location.z - diff + 0.15
-        print(transform.location.z)
+            # Get the ground level of our location, from this we will get the z coordinate
+            valid_labels = [carla.CityObjectLabel.Roads, carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
+                            carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain]
+            points = world.cast_ray(transform.location, transform.location - carla.Location(z=15))
+            #filter the point, keeping only the ones that are in valid_labels
+            points = [point for point in points if point.label in valid_labels]
+            street = points[-1]
+            ground_z = street.location.z
+            # Get the verteces of the bounding box and get the lowest z coordinate
+            vertices = anomaly_tmp.bounding_box.get_world_vertices(transform)
+            min_z = min([vertex.z for vertex in vertices])
+            print(prop, ground_z , min_z)
+            # Calculate the difference between the lowest point of the object and the ground level
+            diff = min_z - ground_z
+            # Adjust the z coordinate of the object
+            transform.location.z = transform.location.z - diff + 0.15
+            print(transform.location.z)
 
 
     if anomaly_in_waypoint:
@@ -696,9 +700,10 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         transform.location.y = wp.transform.location.y
 
     #We destroy the test anomaly and spawn the real one, with the right transform
-    anomaly_tmp.destroy()
+    if not spawn_at_zero:
+        anomaly_tmp.destroy()
     world.tick()
-    anomaly_actor = world.spawn_actor(anomaly, transform)
+    anomaly_actor = world.try_spawn_actor(anomaly, transform)
 
     if anomaly_actor is None:
         print(f"Failed to spawn {prop} anomaly.")

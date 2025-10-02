@@ -68,11 +68,20 @@ def main(args):
                         print(str_anomaly + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
                     if anomaly is not None:
                         world.tick()
+                        world.debug.draw_arrow(
+                            ego_vehicle.get_transform().location,
+                            anomaly.get_transform().location,
+                            thickness=0.1,
+                            arrow_size=0.3,
+                            color=carla.Color(255, 0, 0),
+                            life_time=10
+                        )
                         anomalies.append(anomaly_object)
                 if len(anomalies) == 0:
                     raise Exception("No anomalies spawned, exiting...")
 
             # Setup the collision sensor, only if some anomalies are present
+
             if args.anomalies:
                 coll_sen: carla.Sensor = attach_collision_sensor(args, world, client, ego_vehicle)
                 coll_queue = deque(maxlen=1)
@@ -455,6 +464,7 @@ if __name__ == "__main__":
     parser.add_argument("--number_of_runs", type=int, help="Number of runs", default=1)
     parser.add_argument("--run_time", type=int, help="Run time in seconds", default=10)
     parser.add_argument("--anomalies", nargs="+", type=str, help="List of anomalies to spawn", default=None)
+    parser.add_argument("--spawn_points", nargs="+", type=str, help="List of spawn_points for ego vehicle", default=None)
 
     args = parser.parse_args()
 

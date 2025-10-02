@@ -2,6 +2,7 @@ from main import main
 import time
 import argparse
 import random
+import carla
 
 def benchmark():
     parser = argparse.ArgumentParser(description='CARLA Simulator')
@@ -33,6 +34,7 @@ def benchmark():
     parser.add_argument("--number_of_runs", type=int, help="Number of runs", default=1)
     parser.add_argument("--run_time", type=int, help="Run time in seconds", default=10)
     parser.add_argument("--anomalies", nargs="+", type=str, help="List of anomalies to spawn", default=None)
+    parser.add_argument("--spawn_points", nargs="+", type=carla.Transform, help="List of spawn_points for ego vehicle", default=None)
     args = parser.parse_args()
 
     list_static_anomalies = [
@@ -59,15 +61,17 @@ def benchmark():
 
     print("Total Dynamic Anomalies: ", len(list_dynamic_anomalies))
     print("Total Anomalies: ", len(list_static_anomalies) + len(list_dynamic_anomalies))
-    return
 
-    args.semantic = True
-    args.rgb = True
-    args.depth = True
-    args.lidar = True
-    args.radar = True
-    args.instance = True
-    args.lidar_semantic = True
+    args.spawn_points = [carla.Transform(carla.Location(-110.76443359,46.66007812,0.6), carla.Rotation(0.0,90.6422348022, 0.0))]
+    print(args.spawn_points[0])
+
+    # args.semantic = True
+    # args.rgb = True
+    # args.depth = True
+    # args.lidar = True
+    # args.radar = True
+    # args.instance = True
+    # args.lidar_semantic = True
     #Modify randomly
     args.number_of_runs = 1
     # Modify randomly
@@ -83,11 +87,11 @@ def benchmark():
 
     runs = {
         0 : {"fps": 20, "sensor_tick": '0.1'},
-        1 : {"fps": 20, "sensor_tick": '0.05'},
-        2 : {"fps": 30, "sensor_tick": '0.035'},
-        3 : {"fps": 40, "sensor_tick": '0.025'},
-        4:  {"fps": 50, "sensor_tick": '0.02'},
-        5:  {"fps": 60, "sensor_tick": '0.017'},
+        # 1 : {"fps": 20, "sensor_tick": '0.05'},
+        # 2 : {"fps": 30, "sensor_tick": '0.035'},
+        # 3 : {"fps": 40, "sensor_tick": '0.025'},
+        # 4:  {"fps": 50, "sensor_tick": '0.02'},
+        # 5:  {"fps": 60, "sensor_tick": '0.017'},
     }
 
     # for run in range(args.number_of_runs):
@@ -100,7 +104,7 @@ def benchmark():
         # Random select anomalies (1 to 5)
         number_of_static_anomalies = random.randint(1, 1)
         static_anomalies = random.sample(list_static_anomalies, number_of_static_anomalies)
-        args.anomalies = static_anomalies
+        args.anomalies = ["fallentree","basketball"]
 
         #randomly select number of vehicles
         args.number_of_vehicles = random.randint(10, 40)
