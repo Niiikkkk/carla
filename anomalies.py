@@ -373,7 +373,11 @@ class FlippedCar_Anomaly(Anomaly):
         #make it tick, otherwise the location is 0,0,0 (after the tick is updated). If we don't tick, the car will not be spawned correctly
         self.world.tick()
         loc = anomaly.get_location()
-        loc.z += 1.5  # Raise the car slightly above the ground
+        print(anomaly.bounding_box)
+        if anomaly.bounding_box.extent.z > 1.4:
+            loc.z = 3
+        else:
+            loc.z += 1.5  # Raise the car slightly above the ground
         rot = anomaly.get_transform().rotation
         # Flip the car
         rot.yaw = random.randint(-180, 180)
@@ -625,6 +629,7 @@ class RoadSignTwisted_Anomaly(Anomaly):
         if len(sign) == 0:
             print("RoadSignTwisted -> No traffic sign found in front of the ego vehicle to attach the anomaly to.")
             return None
+        sign.sort(key=lambda s: s.get_location().distance(self.ego_vehicle.get_location()))
         self.sign = sign[0]
 
         bp_lip = self.world.get_blueprint_library()
@@ -658,6 +663,7 @@ class RoadSignVandalized_Anomaly(Anomaly):
         if len(sign) == 0:
             print("RoadSignVandalized -> No traffic sign found in front of the ego vehicle to attach the anomaly to.")
             return None
+        sign.sort(key=lambda s: s.get_location().distance(self.ego_vehicle.get_location()))
         self.sign = sign[0]
         self.old_trf = self.sign.get_transform()
 
@@ -899,7 +905,7 @@ class PlasticBottle_Anomaly(Anomaly):
 
 class WineBottle_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1445,7 +1451,7 @@ class Scooter_Anomaly(Anomaly):
 
 class Brick_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
+        super().__init__(world, client, name, ego_vehicle, False, False, True, False,)
 
     def handle_semantic_tag(self):
         pass

@@ -54,7 +54,7 @@ You can modify this method to spawn the anomaly in a different way if needed. Th
 ## Currently Implemented Static Anomalies
 Here's a list of the already implemented static anomalies in Carla Simulator. For each anomaly there is a brief description of its spawn method/parameters, 
 the handle_semantic_tag method (that in case of static anomalies is usually empty) and a picture.
-The total number of static anomalies up to now is 79.
+The total number of static anomalies up to now is 80.
 
 | Anomaly             | Spawn Method/Parameters                                                                                                                                                                                           | Handle Semantic Tag | Picture                                                |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------|--------------------------------------------------------|
@@ -137,3 +137,4 @@ The total number of static anomalies up to now is 79.
 | Bowl                | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![Bowl](Images/bowl.png)                               |
 | Bucket              | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![Bucket](Images/bucket.png)                           |
 | Speaker             | Spawns in front of the ego vehicle, can be rotated                                                                                                                                                                | Empty               | ![Speaker](Images/speaker.png)                         |
+| Potholes            | In the map are present some potholes, that can be used as static anomalies. The physics will react to them as expected.                                                                                           | Empty               | ![Potholes](Images/potholes.png)                       |

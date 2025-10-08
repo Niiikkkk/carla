@@ -124,7 +124,7 @@ class Semantic_Sensor(Sensor):
                     carla.ColorConverter.CityScapesPalette)
             else:
                 semantic_data.save_to_disk(
-                    'output/semantic/converted/' + str(run) + '/normal_'  + '_%06d' % semantic_data.frame)
+                    'output/semantic/original/' + str(run) + '/normal_'  + '_%06d' % semantic_data.frame)
                 semantic_data.save_to_disk(f'output/semantic/converted/' + str(run) + '/normal_'  + f'_{semantic_data.frame}',
                                            carla.ColorConverter.CityScapesPalette)
 

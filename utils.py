@@ -591,7 +591,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     anomaly: carla.ActorBlueprint = anomalies[0]
 
     if not spawn_at_zero:
-        anomaly_tmp = world.spawn_actor(anomaly, carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0)))
+        anomaly_tmp = world.spawn_actor(anomaly, carla.Transform(carla.Location(0, 0, 60), carla.Rotation(0, 0, 0)))
         while True:
             distance = random.uniform(10,30)
             # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
@@ -625,12 +625,12 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
                 step_size = 0.05
             else:
                 step_size = 0.1
+            # We add a small margin to the extent to avoid issues with the bounding box colliding ad edges with other bounding boxes
+            extent.x += 0.05
+            extent.y += 0.05
             points_x = extent.x * 2 / step_size
             points_y = extent.y * 2 / step_size
             is_valid = True
-            # We add a small margin to the extent to avoid issues with the bounding box colliding ad edges with other bounding boxes
-            extent.x += 0.15
-            extent.y += 0.15
             #If we have one on this below, we are good to go. NONE means no label, so is fine too (for example a box collision has NONE label)
             valid_labels = [carla.CityObjectLabel.Roads, carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
                             carla.CityObjectLabel.RoadLines, carla.CityObjectLabel.Terrain, carla.CityObjectLabel.NONE]
@@ -683,6 +683,8 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
             points = [point for point in points if point.label in valid_labels]
             street = points[-1]
             ground_z = street.location.z
+            if ground_z < 0:
+                ground_z = 0
             # Get the verteces of the bounding box and get the lowest z coordinate
             vertices = anomaly_tmp.bounding_box.get_world_vertices(transform)
             min_z = min([vertex.z for vertex in vertices])

@@ -13,8 +13,8 @@ def benchmark():
     parser.add_argument("--filterv", type=str, help="Vehicle filter", default="vehicle.*")
     parser.add_argument("--filterw", type=str, help="Pedestrian filter", default="walker.*")
     parser.add_argument("--hybrid", action='store_true', help="Use hybrid physics mode")
-    parser.add_argument("--image_size_x", type=str, help="Image size X", default='800')
-    parser.add_argument("--image_size_y", type=str, help="Image size Y", default='600')
+    parser.add_argument("--image_size_x", type=str, help="Image size X", default='1920')
+    parser.add_argument("--image_size_y", type=str, help="Image size Y", default='1080')
     parser.add_argument('--sensor_tick', type=str, default='0.1',
                         help='Sensor tick time in seconds (This is the FPS of the sensors)')
     parser.add_argument("--fps", type=int, help="FPS the simulation should run at", default=20)
@@ -39,9 +39,12 @@ def benchmark():
 
     list_static_anomalies = [
         "baseballbat", "basketball", "beerbottle", "football", "ladder", "mattress", "skateboard", "tire", "woodpalette",
-        "roadsigntwisted", "roadsignvandalized", "garbagebag", "brokenchair", "hubcap",
+        "roadsigntwisted", "roadsignvandalized",
+        "garbagebag", "brokenchair", "hubcap",
         "newspaper", "box", "plasticbottle", "winebottle", "metalbottle", "table", "officechair", "oldstove", "shoppingcart",
         "bag", "helmet", "hat", "trafficcone", "fallenstreetlight", "book", "stroller", "fuelcan", "constructionbarrier",
+
+        # TO TEST sem seg
         "suitcase", "carmirror", "umbrella", "tierscooter", "brick", "cardoor", "rock", "hoodcar", "trunkcar", "kidtoy", "mannequin", "tablet",
         "laptop", "smartphone", "television", "scooter",
         "washingmachine", "fridge", "pilesand", "shovel", "rake", "deliverybox", "fallentree", "oven",
@@ -50,6 +53,8 @@ def benchmark():
         "wallet", "coffecup", "fence", "pizzabox", "toycar", "remotecontrol", "cd", "powerbank", "deodorant", "lighter",
         "bowl", "bucket", "speaker"
     ]
+
+    # fallentree, take the closest tree (make a range to find it)
 
     print("Total Static Anomalies: ", len(list_static_anomalies))
 
@@ -62,15 +67,12 @@ def benchmark():
     print("Total Dynamic Anomalies: ", len(list_dynamic_anomalies))
     print("Total Anomalies: ", len(list_static_anomalies) + len(list_dynamic_anomalies))
 
-    args.spawn_points = [carla.Transform(carla.Location(-110.76443359,46.66007812,0.6), carla.Rotation(0.0,90.6422348022, 0.0))]
-    print(args.spawn_points[0])
-
-    # args.semantic = True
-    # args.rgb = True
-    # args.depth = True
+    #args.semantic = True
+    #args.rgb = True
+    #args.depth = True
     # args.lidar = True
     # args.radar = True
-    # args.instance = True
+    #args.instance = True
     # args.lidar_semantic = True
     #Modify randomly
     args.number_of_runs = 1
@@ -104,15 +106,17 @@ def benchmark():
         # Random select anomalies (1 to 5)
         number_of_static_anomalies = random.randint(1, 1)
         static_anomalies = random.sample(list_static_anomalies, number_of_static_anomalies)
-        args.anomalies = ["fallentree","basketball"]
+        args.anomalies = ["fallentree"]
 
         #randomly select number of vehicles
         args.number_of_vehicles = random.randint(10, 40)
-        args.number_of_vehicles = 10
+        args.number_of_vehicles = 0
 
         #randomly select number of pedestrians
         args.number_of_pedestrians = random.randint(10, 40)
-        args.number_of_pedestrians = 10
+        args.number_of_pedestrians = 0
+
+        #args.spawn_points = [carla.Transform(carla.Location(x=14.13009155,y=69.71400391,z=0.6), carla.Rotation(0,0,0))]
 
         print(f"Running run {run+1} / {len(runs)} with the following parameters:")
         print(args)

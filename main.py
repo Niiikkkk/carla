@@ -68,14 +68,6 @@ def main(args):
                         print(str_anomaly + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
                     if anomaly is not None:
                         world.tick()
-                        world.debug.draw_arrow(
-                            ego_vehicle.get_transform().location,
-                            anomaly.get_transform().location,
-                            thickness=0.1,
-                            arrow_size=0.3,
-                            color=carla.Color(255, 0, 0),
-                            life_time=10
-                        )
                         anomalies.append(anomaly_object)
                 if len(anomalies) == 0:
                     raise Exception("No anomalies spawned, exiting...")
@@ -98,8 +90,11 @@ def main(args):
 
             #set autopilot for the vehicles and start the simulation
             vehicles_in_world = world.get_actors().filter("*vehicle*")
+            anomaly_instances = [anomaly_obj.anomaly.id for anomaly_obj in anomalies]
             for vehicle in vehicles_in_world:
-                vehicle.set_autopilot(True)
+                #There's also the flipped car anomaly that spawn a vehicle, we don't what to set autopilot to it
+                if not vehicle.id in anomaly_instances:
+                    vehicle.set_autopilot(True)
 
             #With a for, it runs N times the simulation
             # 0.05 is the simulation run for each tick.
