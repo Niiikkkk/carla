@@ -1,8 +1,57 @@
+from clean_up import world
 from main import main
 import time
 import argparse
 import random
 import carla
+
+def find_size_anomaly():
+    list_static_anomalies = [
+        "baseballbat", "basketball", "beerbottle", "football", "ladder", "mattress", "skateboard", "tire",
+        "woodpalette",
+        "roadsigntwisted", "roadsignvandalized",
+        "garbagebag", "brokenchair", "hubcap",
+        "newspaper", "box", "plasticbottle", "winebottle", "metalbottle", "table", "officechair", "oldstove",
+        "shoppingcart",
+        "bag", "helmet", "hat", "trafficcone", "fallenstreetlight", "book", "stroller", "fuelcan",
+        "constructionbarrier",
+
+        # TO TEST sem seg
+        "suitcase", "carmirror", "umbrella", "tierscooter", "brick", "cardoor", "rock", "hoodcar", "trunkcar", "kidtoy",
+        "mannequin", "tablet",
+        "laptop", "smartphone", "television", "scooter",
+        "washingmachine", "fridge", "pilesand", "shovel", "rake", "deliverybox", "fallentree", "oven",
+        "wheelchair", "hammer", "wrench", "shoe", "glove",
+        "drill", "saw", "sunglasses", "bikes", "flippedcar",
+        "wallet", "coffecup", "fence", "pizzabox", "toycar", "remotecontrol", "cd", "powerbank", "deodorant", "lighter",
+        "bowl", "bucket", "speaker"
+    ]
+
+    client: carla.Client = carla.Client("localhost", 2000)
+    world: carla.World = client.get_world()
+    bp_lib = world.get_blueprint_library()
+    for anomaly_name in list_static_anomalies:
+        if anomaly_name in ["roadsigntwisted", "flippedcar"]:
+            continue
+        anomaly_name_bp: carla.ActorBlueprint = bp_lib.filter(f"blueprint.{anomaly_name}")[0]
+        ano_actor = world.try_spawn_actor(anomaly_name_bp,carla.Transform(carla.Location(0,0,100), carla.Rotation(0,0,0)))
+        if ano_actor is None:
+            print(f"Could not spawn anomaly {anomaly_name}")
+            continue
+        width = ano_actor.bounding_box.extent.y * 2
+        height = ano_actor.bounding_box.extent.z * 2
+        length = ano_actor.bounding_box.extent.x * 2
+        area_bb = 2*(length*width + length*height + width*height)
+        print(anomaly_name, area_bb, ano_actor.bounding_box.extent)
+        if area_bb < 0.25:
+            print(anomaly_name, "TINY")
+        if area_bb > 0.25 and area_bb < 1.3:
+            print(anomaly_name, "SMALL")
+        if area_bb > 1.3 and area_bb < 7.0:
+            print(anomaly_name, "MEDIUM")
+        if area_bb > 7.0:
+            print(anomaly_name, "LARGE")
+        ano_actor.destroy()
 
 def benchmark():
     parser = argparse.ArgumentParser(description='CARLA Simulator')
@@ -67,7 +116,7 @@ def benchmark():
     print("Total Dynamic Anomalies: ", len(list_dynamic_anomalies))
     print("Total Anomalies: ", len(list_static_anomalies) + len(list_dynamic_anomalies))
 
-    #args.semantic = True
+    args.semantic = True
     #args.rgb = True
     #args.depth = True
     # args.lidar = True
@@ -106,7 +155,7 @@ def benchmark():
         # Random select anomalies (1 to 5)
         number_of_static_anomalies = random.randint(1, 1)
         static_anomalies = random.sample(list_static_anomalies, number_of_static_anomalies)
-        args.anomalies = ["fallentree"]
+        args.anomalies = ["officechair", "smartphone", "fridge", "helmet"]
 
         #randomly select number of vehicles
         args.number_of_vehicles = random.randint(10, 40)
@@ -128,3 +177,4 @@ def benchmark():
 
 if __name__ == "__main__":
     benchmark()
+    #find_size_anomaly()

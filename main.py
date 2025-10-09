@@ -426,6 +426,16 @@ def generate_anomaly_object(world, client, ego_vehicle, name):
         return Bucket_Anomaly(world, client, name, ego_vehicle)
     if name == "speaker":
         return Speaker_Anomaly(world, client, name, ego_vehicle)
+    if name == "guitar":
+        return Guitar_Anomaly(world, client, name, ego_vehicle)
+    if name == "pillow":
+        return Pillow_Anomaly(world, client, name, ego_vehicle)
+    if name == "fan":
+        return Fan_Anomaly(world, client, name, ego_vehicle)
+    if name == "dumbell":
+        return Dumbell_Anomaly(world, client, name, ego_vehicle)
+    if name == "trolley":
+        return Trolley_Anomaly(world, client, name, ego_vehicle)
     print("Anomaly " + name + " not found, returning None")
     return None
 
