@@ -565,7 +565,7 @@ def view_lidar(lidar_name):
     pcd = o3d.io.read_point_cloud("output/lidar/",lidar_name)
     o3d.visualization.draw_geometries([pcd])
 
-def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,anomaly_in_waypoint=True,spawn_at_zero=False,spawn_on_right=False,big_mesh=False):
+def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,size,anomaly_in_waypoint=True,spawn_at_zero=False,spawn_on_right=False,big_mesh=False):
     """Spawn an anomaly in the CARLA simulator. The anomaly will have the same rotation of the ego vehicle
     Args:
         world (carla.World): The CARLA world object.
@@ -593,7 +593,17 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
     if not spawn_at_zero:
         anomaly_tmp = world.spawn_actor(anomaly, carla.Transform(carla.Location(0, 0, 60), carla.Rotation(0, 0, 0)))
         while True:
-            distance = random.uniform(10,30)
+            if size == "tiny":
+                distance = random.uniform(10,15)
+            elif size == "small":
+                distance = random.uniform(15,20)
+            elif size == "medium":
+                distance = random.uniform(20,25)
+            elif size == "large":
+                distance = random.uniform(25,30)
+            else:
+                print("Invalid size, using 10 to 30")
+                distance = random.uniform(10,30)
             # The dynamic anomalies are spawned on the sidewalk, on the right of the ego vehicle, so it's fixed, meanwhile the static anomalies are spawned randomly
             if not is_dynamic:
                 right_left = random.uniform(-6,6)

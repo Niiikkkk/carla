@@ -35,7 +35,7 @@ class Sensor:
         anomaly_name = ""
         if anomaly_list:
             for anomaly in anomaly_list:
-                anomaly_name = anomaly_name + anomaly + "_"
+                anomaly_name = anomaly_name + anomaly[0] + "_"
             return anomaly_name
         return None
 

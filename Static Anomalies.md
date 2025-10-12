@@ -54,7 +54,7 @@ You can modify this method to spawn the anomaly in a different way if needed. Th
 ## Currently Implemented Static Anomalies
 Here's a list of the already implemented static anomalies in Carla Simulator. For each anomaly there is a brief description of its spawn method/parameters, 
 the handle_semantic_tag method (that in case of static anomalies is usually empty) and a picture.
-The total number of static anomalies up to now is 80.
+The total number of static anomalies up to now is 85.
 
 | Anomaly             | Spawn Method/Parameters                                                                                                                                                                                           | Handle Semantic Tag | Picture                                                |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------|--------------------------------------------------------|

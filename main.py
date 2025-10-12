@@ -3,7 +3,26 @@ import argparse
 from sensors import *
 from anomalies import *
 
+def log(message, args):
+    print("[LOG] ", message, args)
+
 def main(args):
+
+    if args.log:
+        log("Seed: ", args.seed)
+        log("Anomalies: ", args.anomalies)
+        log("Number of vehicles: ", args.number_of_vehicles)
+        log("Number of pedestrians: ", args.number_of_pedestrians)
+        log("Semantic sensor: ", args.semantic)
+        log("RGB sensor: ", args.rgb)
+        log("Depth sensor: ", args.depth)
+        log("Lidar sensor: ", args.lidar)
+        log("Lidar Semantic sensor: ", args.lidar_semantic)
+        log("Radar sensor: ", args.radar)
+        log("Instance Segmentation sensor: ", args.instance)
+        log("FPS: ", args.fps)
+        log("Sensor tick: ", args.sensor_tick)
+        log("Hybrid mode: ", args.hybrid)
 
     client:carla.Client = carla.Client('localhost', 2000)
     world:carla.World = client.get_world()
@@ -32,8 +51,8 @@ def main(args):
         fog_density=args.fog_density,
         fog_distance=args.fog_distance,
     )
-    world.set_weather(carla.WeatherParameters.HardRainNoon)
-    world.tick()
+    #world.set_weather(carla.WeatherParameters.HardRainNoon)
+    #world.tick()
 
     # Get the spectator
     # the transform guide everything. The location has x,y,z.
@@ -61,11 +80,13 @@ def main(args):
             # Spawn the anomalies
             if args.anomalies:
                 for str_anomaly in args.anomalies:
-                    anomaly_object = generate_anomaly_object(world, client, ego_vehicle, str_anomaly)
-                    world.tick()
+                    anomaly_name = str_anomaly[0]
+                    size = str_anomaly[1]
+                    anomaly_object = generate_anomaly_object(world, client, ego_vehicle, anomaly_name, size)
+                    #world.tick()
                     anomaly: carla.Actor = anomaly_object.spawn_anomaly()
                     if anomaly is None:
-                        print(str_anomaly + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
+                        print(str_anomaly[0] + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
                     if anomaly is not None:
                         world.tick()
                         anomalies.append(anomaly_object)
@@ -95,7 +116,6 @@ def main(args):
                 #There's also the flipped car anomaly that spawn a vehicle, we don't what to set autopilot to it
                 if not vehicle.id in anomaly_instances:
                     vehicle.set_autopilot(True)
-
             #With a for, it runs N times the simulation
             # 0.05 is the simulation run for each tick.
             loops = args.run_time / simulation_time_for_tick
@@ -156,7 +176,6 @@ def main(args):
                     if more_distance > 0:
                         print(f"Ego vehicle passed the furthest anomaly {more_distance_anomaly}, stopping simulation...")
                         break
-
                     for anomaly_obj in anomalies:
                         anomaly_obj.handle_semantic_tag()
 
@@ -227,215 +246,215 @@ def set_up_sensors(args, client, ego_vehicle, sensors, world):
         instance_sen.listen(lambda data: instance_queue.append(data))
         sensors.append(Instant_Segmentation_Sensor(instance_queue,instance_sen))
 
-def generate_anomaly_object(world, client, ego_vehicle, name):
+def generate_anomaly_object(world, client, ego_vehicle, name, size):
     if name == "labrador":
-        return Labrador_Anomaly(world, client, name, ego_vehicle)
+        return Labrador_Anomaly(world, client, name, ego_vehicle,size)
     if name == "baseballbat":
-        return Baseballbat_Anomaly(world, client, name, ego_vehicle)
+        return Baseballbat_Anomaly(world, client, name, ego_vehicle,size)
     if name == "basketball":
-        return Basketball_Anomaly(world, client, name, ego_vehicle)
+        return Basketball_Anomaly(world, client, name, ego_vehicle,size)
     if name == "person":
-        return Person_Anomaly(world, client, name, ego_vehicle)
+        return Person_Anomaly(world, client, name, ego_vehicle,size)
     if name == "tree":
-        return Tree_Anomaly(world, client, name, ego_vehicle)
+        return Tree_Anomaly(world, client, name, ego_vehicle,size)
     if name == "beerbottle":
-        return Beer_Anomaly(world, client, name, ego_vehicle)
+        return Beer_Anomaly(world, client, name, ego_vehicle,size)
     if name == "football":
-        return Football_Anomaly(world, client, name, ego_vehicle)
+        return Football_Anomaly(world, client, name, ego_vehicle,size)
     if name == "ladder":
-        return Ladder_Anomaly(world, client, name, ego_vehicle)
+        return Ladder_Anomaly(world, client, name, ego_vehicle,size)
     if name == "mattress":
-        return Mattress_Anomaly(world, client, name, ego_vehicle)
+        return Mattress_Anomaly(world, client, name, ego_vehicle,size)
     if name == "skateboard":
-        return Skateboard_Anomaly(world, client, name, ego_vehicle)
+        return Skateboard_Anomaly(world, client, name, ego_vehicle,size)
     if name == "tire":
-        return Tire_Anomaly(world, client, name, ego_vehicle)
+        return Tire_Anomaly(world, client, name, ego_vehicle,size)
     if name == "woodpalette":
-        return WoodPalette_Anomaly(world, client, name, ego_vehicle)
+        return WoodPalette_Anomaly(world, client, name, ego_vehicle,size)
     if name == "basketball_bounce":
-        return Basketball_Bounce_Anomaly(world, client, name, ego_vehicle)
+        return Basketball_Bounce_Anomaly(world, client, name, ego_vehicle,size)
     if name == "football_bounce":
-        return Football_Bounce_Anomaly(world, client, name, ego_vehicle)
+        return Football_Bounce_Anomaly(world, client, name, ego_vehicle,size)
     if name == "streetlight":
-        return StreetLight_Anomaly(world, client, name, ego_vehicle)
+        return StreetLight_Anomaly(world, client, name, ego_vehicle,size)
     if name == "trashcan":
-        return TrashCan_Anomaly(world, client, name, ego_vehicle)
+        return TrashCan_Anomaly(world, client, name, ego_vehicle,size)
     if name == "trafficlight":
-        return TrafficLight_Anomaly(world, client, name, ego_vehicle)
+        return TrafficLight_Anomaly(world, client, name, ego_vehicle,size)
     if name == "flippedcar":
-        return FlippedCar_Anomaly(world, client, name, ego_vehicle)
+        return FlippedCar_Anomaly(world, client, name, ego_vehicle,size)
     if name == "instantcarbreak":
-        return InstantCarBreak_Anomaly(world, client, name, ego_vehicle)
+        return InstantCarBreak_Anomaly(world, client, name, ego_vehicle,size)
     if name == "trafficlightoff":
-        return TrafficLightOff_Anomaly(world, client, name, ego_vehicle)
+        return TrafficLightOff_Anomaly(world, client, name, ego_vehicle,size)
     if name == "carthroughredlight":
-        return CarThroughRedLight_Anomaly(world, client, name, ego_vehicle)
+        return CarThroughRedLight_Anomaly(world, client, name, ego_vehicle,size)
     if name == "roadsigntwisted":
-        return RoadSignTwisted_Anomaly(world, client, name, ego_vehicle)
+        return RoadSignTwisted_Anomaly(world, client, name, ego_vehicle,size)
     if name == "roadsignvandalized":
-        return RoadSignVandalized_Anomaly(world, client, name, ego_vehicle)
+        return RoadSignVandalized_Anomaly(world, client, name, ego_vehicle,size)
     # if name == "motorcycle":
-    #     return Motorcycle_Anomaly(world, client, name, ego_vehicle)
+    #     return Motorcycle_Anomaly(world, client, name, ego_vehicle,size)
     if name == "garbagebag":
-        return GarbageBag_Anomaly(world, client, name, ego_vehicle)
+        return GarbageBag_Anomaly(world, client, name, ego_vehicle,size)
     if name == "garbagebagwind":
-        return GarbageBagWind_Anomaly(world, client, name, ego_vehicle)
+        return GarbageBagWind_Anomaly(world, client, name, ego_vehicle,size)
     if name == "brokenchair":
-        return BrokenChair_Anomaly(world, client, name, ego_vehicle)
+        return BrokenChair_Anomaly(world, client, name, ego_vehicle,size)
     if name == "bikes":
-        return Bikes_Anomaly(world, client, name, ego_vehicle)
+        return Bikes_Anomaly(world, client, name, ego_vehicle,size)
     if name == "hubcap":
-        return Hubcap_Anomaly(world, client, name, ego_vehicle)
+        return Hubcap_Anomaly(world, client, name, ego_vehicle,size)
     if name == "newspaper":
-        return Newspaper_Anomaly(world, client, name, ego_vehicle)
+        return Newspaper_Anomaly(world, client, name, ego_vehicle,size)
     if name == "blowingnewspaper":
-        return BlowingNewspaper_Anomaly(world, client, name, ego_vehicle)
+        return BlowingNewspaper_Anomaly(world, client, name, ego_vehicle,size)
     if name == "box":
-        return Box_Anomaly(world, client, name, ego_vehicle)
+        return Box_Anomaly(world, client, name, ego_vehicle,size)
     if name == "plasticbottle":
-        return PlasticBottle_Anomaly(world, client, name, ego_vehicle)
+        return PlasticBottle_Anomaly(world, client, name, ego_vehicle,size)
     if name == "winebottle":
-        return WineBottle_Anomaly(world, client, name, ego_vehicle)
+        return WineBottle_Anomaly(world, client, name, ego_vehicle,size)
     if name == "metalbottle":
-        return MetalBottle_Anomaly(world, client, name, ego_vehicle)
+        return MetalBottle_Anomaly(world, client, name, ego_vehicle,size)
     if name == "table":
-        return Table_Anomaly(world, client, name, ego_vehicle)
+        return Table_Anomaly(world, client, name, ego_vehicle,size)
     if name == "officechair":
-        return OfficeChair_Anomaly(world, client, name, ego_vehicle)
+        return OfficeChair_Anomaly(world, client, name, ego_vehicle,size)
     if name == "oldstove":
-        return OldStove_Anomaly(world, client, name, ego_vehicle)
+        return OldStove_Anomaly(world, client, name, ego_vehicle,size)
     if name == "shoppingcart":
-        return ShoppingCart_Anomaly(world, client, name, ego_vehicle)
+        return ShoppingCart_Anomaly(world, client, name, ego_vehicle,size)
     if name == "bag":
-        return Bag_Anomaly(world, client, name, ego_vehicle)
+        return Bag_Anomaly(world, client, name, ego_vehicle,size)
     if name == "helmet":
-        return Helmet_Anomaly(world, client, name, ego_vehicle)
+        return Helmet_Anomaly(world, client, name, ego_vehicle,size)
     if name == "hat":
-        return Hat_Anomaly(world, client, name, ego_vehicle)
+        return Hat_Anomaly(world, client, name, ego_vehicle,size)
     if name == "crash":
-        return Crash_Anomaly(world, client, name, ego_vehicle)
+        return Crash_Anomaly(world, client, name, ego_vehicle,size)
     if name == "bird":
-        return Bird_Anomaly(world, client, name, ego_vehicle)
+        return Bird_Anomaly(world, client, name, ego_vehicle,size)
     if name == "trafficcone":
-        return TrafficCone_Anomaly(world, client, name, ego_vehicle)
+        return TrafficCone_Anomaly(world, client, name, ego_vehicle,size)
     if name == "dangerdriver":
-        return DangerDriver_Anomaly(world, client, name, ego_vehicle)
+        return DangerDriver_Anomaly(world, client, name, ego_vehicle,size)
     if name == "billboard":
-        return BillBoard_Anomaly(world, client, name, ego_vehicle)
+        return BillBoard_Anomaly(world, client, name, ego_vehicle,size)
     if name == "fallenstreetlight":
-        return FallenStreetLight_Anomaly(world, client, name, ego_vehicle)
+        return FallenStreetLight_Anomaly(world, client, name, ego_vehicle,size)
     if name == "book":
-        return Book_Anomaly(world, client, name, ego_vehicle)
+        return Book_Anomaly(world, client, name, ego_vehicle,size)
     if name == "stroller":
-        return Stroller_Anomaly(world, client, name, ego_vehicle)
+        return Stroller_Anomaly(world, client, name, ego_vehicle,size)
     if name == "fuelcan":
-        return FuelCan_Anomaly(world, client, name, ego_vehicle)
+        return FuelCan_Anomaly(world, client, name, ego_vehicle,size)
     if name == "constructionbarrier":
-        return ConstructionBarrier_Anomaly(world, client, name, ego_vehicle)
+        return ConstructionBarrier_Anomaly(world, client, name, ego_vehicle,size)
     # if name == "constructionsite":
-    #     return ConstructionSite_Anomaly(world, client, name, ego_vehicle)
+    #     return ConstructionSite_Anomaly(world, client, name, ego_vehicle,size)
     if name == "suitcase":
-        return Suitcase_Anomaly(world, client, name, ego_vehicle)
+        return Suitcase_Anomaly(world, client, name, ego_vehicle,size)
     if name == "carmirror":
-        return CarMirror_Anomaly(world, client, name, ego_vehicle)
+        return CarMirror_Anomaly(world, client, name, ego_vehicle,size)
     if name == "drone":
-        return Drone_Anomaly(world, client, name, ego_vehicle)
+        return Drone_Anomaly(world, client, name, ego_vehicle,size)
     if name == "umbrella":
-        return Umbrella_Anomaly(world, client, name, ego_vehicle)
+        return Umbrella_Anomaly(world, client, name, ego_vehicle,size)
     if name == "tierscooter":
-        return TierScooter_Anomaly(world, client, name, ego_vehicle)
+        return TierScooter_Anomaly(world, client, name, ego_vehicle,size)
     if name == "scooter":
-        return Scooter_Anomaly(world, client, name, ego_vehicle)
+        return Scooter_Anomaly(world, client, name, ego_vehicle,size)
     if name == "brick":
-        return Brick_Anomaly(world, client, name, ego_vehicle)
+        return Brick_Anomaly(world, client, name, ego_vehicle,size)
     if name == "cardoor":
-        return CarDoor_Anomaly(world, client, name, ego_vehicle)
+        return CarDoor_Anomaly(world, client, name, ego_vehicle,size)
     if name == "rock":
-        return Rock_Anomaly(world, client, name, ego_vehicle)
+        return Rock_Anomaly(world, client, name, ego_vehicle,size)
     if name == "hoodcar":
-        return HoodCar_Anomaly(world, client, name, ego_vehicle)
+        return HoodCar_Anomaly(world, client, name, ego_vehicle,size)
     if name == "trunkcar":
-        return TrunkCar_Anomaly(world, client, name, ego_vehicle)
+        return TrunkCar_Anomaly(world, client, name, ego_vehicle,size)
     if name == "kidtoy":
-        return KidToy_Anomaly(world, client, name, ego_vehicle)
+        return KidToy_Anomaly(world, client, name, ego_vehicle,size)
     if name == "mannequin":
-        return Mannequin_Anomaly(world, client, name, ego_vehicle)
+        return Mannequin_Anomaly(world, client, name, ego_vehicle,size)
     if name == "tablet":
-        return Tablet_Anomaly(world, client, name, ego_vehicle)
+        return Tablet_Anomaly(world, client, name, ego_vehicle,size)
     if name == "laptop":
-        return Laptop_Anomaly(world, client, name, ego_vehicle)
+        return Laptop_Anomaly(world, client, name, ego_vehicle,size)
     if name == "smartphone":
-        return Smartphone_Anomaly(world, client, name, ego_vehicle)
+        return Smartphone_Anomaly(world, client, name, ego_vehicle,size)
     if name == "television":
-        return Television_Anomaly(world, client, name, ego_vehicle)
+        return Television_Anomaly(world, client, name, ego_vehicle,size)
     if name == "washingmachine":
-        return WashingMachine_Anomaly(world, client, name, ego_vehicle)
+        return WashingMachine_Anomaly(world, client, name, ego_vehicle,size)
     if name == "fridge":
-        return Fridge_Anomaly(world, client, name, ego_vehicle)
+        return Fridge_Anomaly(world, client, name, ego_vehicle,size)
     if name == "pilesand":
-        return PileSand_Anomaly(world, client, name, ego_vehicle)
+        return PileSand_Anomaly(world, client, name, ego_vehicle,size)
     if name == "shovel":
-        return Shovel_Anomaly(world, client, name, ego_vehicle)
+        return Shovel_Anomaly(world, client, name, ego_vehicle,size)
     if name == "rake":
-        return Rake_Anomaly(world, client, name, ego_vehicle)
+        return Rake_Anomaly(world, client, name, ego_vehicle,size)
     if name == "deliverybox":
-        return DeliveryBox_Anomaly(world, client, name, ego_vehicle)
+        return DeliveryBox_Anomaly(world, client, name, ego_vehicle,size)
     if name == "fallentree":
-        return FallenTree_Anomaly(world, client, name, ego_vehicle)
+        return FallenTree_Anomaly(world, client, name, ego_vehicle,size)
     if name == "oven":
-        return Oven_Anomaly(world, client, name, ego_vehicle)
+        return Oven_Anomaly(world, client, name, ego_vehicle,size)
     if name == "wheelchair":
-        return WheelChair_Anomaly(world, client, name, ego_vehicle)
+        return WheelChair_Anomaly(world, client, name, ego_vehicle,size)
     if name == "shoe":
-        return Shoe_Anomaly(world, client, name, ego_vehicle)
+        return Shoe_Anomaly(world, client, name, ego_vehicle,size)
     if name == "glove":
-        return Glove_Anomaly(world, client, name, ego_vehicle)
+        return Glove_Anomaly(world, client, name, ego_vehicle,size)
     if name == "hammer":
-        return Hammer_Anomaly(world, client, name, ego_vehicle)
+        return Hammer_Anomaly(world, client, name, ego_vehicle,size)
     if name == "wrench":
-        return Wrench_Anomaly(world, client, name, ego_vehicle)
+        return Wrench_Anomaly(world, client, name, ego_vehicle,size)
     if name == "drill":
-        return Drill_Anomaly(world, client, name, ego_vehicle)
+        return Drill_Anomaly(world, client, name, ego_vehicle,size)
     if name == "saw":
-        return Saw_Anomaly(world, client, name, ego_vehicle)
+        return Saw_Anomaly(world, client, name, ego_vehicle,size)
     if name == "sunglasses":
-        return Sunglasses_Anomaly(world, client, name, ego_vehicle)
+        return Sunglasses_Anomaly(world, client, name, ego_vehicle,size)
     if name == "wallet":
-        return Wallet_Anomaly(world, client, name, ego_vehicle)
+        return Wallet_Anomaly(world, client, name, ego_vehicle,size)
     if name == "coffecup":
-        return CoffeeCup_Anomaly(world, client, name, ego_vehicle)
+        return CoffeeCup_Anomaly(world, client, name, ego_vehicle,size)
     if name == "fence":
-        return Fence_Anomaly(world, client, name, ego_vehicle)
+        return Fence_Anomaly(world, client, name, ego_vehicle,size)
     if name == "pizzabox":
-        return PizzaBox_Anomaly(world, client, name, ego_vehicle)
+        return PizzaBox_Anomaly(world, client, name, ego_vehicle,size)
     if name == "toycar":
-        return ToyCar_Anomaly(world, client, name, ego_vehicle)
+        return ToyCar_Anomaly(world, client, name, ego_vehicle,size)
     if name == "remotecontrol":
-        return RemoteControl_Anomaly(world, client, name, ego_vehicle)
+        return RemoteControl_Anomaly(world, client, name, ego_vehicle,size)
     if name == "cd":
-        return CD_Anomaly(world, client, name, ego_vehicle)
+        return CD_Anomaly(world, client, name, ego_vehicle,size)
     if name == "powerbank":
-        return PowerBank_Anomaly(world, client, name, ego_vehicle)
+        return PowerBank_Anomaly(world, client, name, ego_vehicle,size)
     if name == "deodorant":
-        return Deodorant_Anomaly(world, client, name, ego_vehicle)
+        return Deodorant_Anomaly(world, client, name, ego_vehicle,size)
     if name == "lighter":
-        return Lighter_Anomaly(world, client, name, ego_vehicle)
+        return Lighter_Anomaly(world, client, name, ego_vehicle,size)
     if name == "bowl":
-        return Bowl_Anomaly(world, client, name, ego_vehicle)
+        return Bowl_Anomaly(world, client, name, ego_vehicle,size)
     if name == "bucket":
-        return Bucket_Anomaly(world, client, name, ego_vehicle)
+        return Bucket_Anomaly(world, client, name, ego_vehicle,size)
     if name == "speaker":
-        return Speaker_Anomaly(world, client, name, ego_vehicle)
+        return Speaker_Anomaly(world, client, name, ego_vehicle,size)
     if name == "guitar":
-        return Guitar_Anomaly(world, client, name, ego_vehicle)
+        return Guitar_Anomaly(world, client, name, ego_vehicle,size)
     if name == "pillow":
-        return Pillow_Anomaly(world, client, name, ego_vehicle)
+        return Pillow_Anomaly(world, client, name, ego_vehicle,size)
     if name == "fan":
-        return Fan_Anomaly(world, client, name, ego_vehicle)
+        return Fan_Anomaly(world, client, name, ego_vehicle,size)
     if name == "dumbell":
-        return Dumbell_Anomaly(world, client, name, ego_vehicle)
+        return Dumbell_Anomaly(world, client, name, ego_vehicle,size)
     if name == "trolley":
-        return Trolley_Anomaly(world, client, name, ego_vehicle)
+        return Trolley_Anomaly(world, client, name, ego_vehicle,size)
     print("Anomaly " + name + " not found, returning None")
     return None
 
@@ -468,8 +487,9 @@ if __name__ == "__main__":
     parser.add_argument("--fog_distance", type=float, help="Use fog distance", default=0.0)
     parser.add_argument("--number_of_runs", type=int, help="Number of runs", default=1)
     parser.add_argument("--run_time", type=int, help="Run time in seconds", default=10)
-    parser.add_argument("--anomalies", nargs="+", type=str, help="List of anomalies to spawn", default=None)
+    parser.add_argument("--anomalies", nargs="+", type=str, help="Dict of anomalies to spawn and size", default=None)
     parser.add_argument("--spawn_points", nargs="+", type=str, help="List of spawn_points for ego vehicle", default=None)
+    parser.add_argument("--log", action='store_true', help="Log to file", default=False)
 
     args = parser.parse_args()
 

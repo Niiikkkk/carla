@@ -11,7 +11,9 @@ from pandas.io.formats.format import return_docstring
 from utils import *
 
 class Anomaly:
-    def __init__(self, world: carla.World, client: carla.Client, name ,ego_vehicle:carla.Actor, is_dynamic, is_character, can_be_rotated, anomaly_in_waypoint, spawn_at_zero=False, spawn_on_right=False, big_mesh=False):
+    def __init__(self, world: carla.World, client: carla.Client, name, ego_vehicle: carla.Actor, size, is_dynamic,
+                 is_character, can_be_rotated, anomaly_in_waypoint, spawn_at_zero=False, spawn_on_right=False,
+                 big_mesh=False):
         self.world = world
         self.client = client
         self.ego_vehicle = ego_vehicle
@@ -26,10 +28,11 @@ class Anomaly:
         self.big_mesh = big_mesh
         self.anomaly: carla.Actor = None
         self.tick = 0
+        self.size = size
 
     def spawn_anomaly(self):
         print("Spawning anomaly...", self.name)
-        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.is_dynamic, self.is_character, self.can_be_rotated, self.anomaly_in_waypoint, self.spawn_at_zero, self.spawn_on_right, self.big_mesh)
+        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.is_dynamic, self.is_character, self.can_be_rotated, self.size, self.anomaly_in_waypoint, self.spawn_at_zero, self.spawn_on_right, self.big_mesh)
         self.anomaly = anomaly
         if self.anomaly:
             print("Anomaly Spawned!")
@@ -123,15 +126,15 @@ class Anomaly:
         print(self.name + " -> Destroying anomaly...")
 
 class Labrador_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, True, False, True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, True, True, False, True)
         self.distance_from_sidewalk = 2
 
     def handle_semantic_tag(self):
         current_wp_loc = self.map.get_waypoint(self.anomaly.get_location(), project_to_road=True, lane_type=carla.LaneType.Sidewalk).transform.location
         current_loc = self.anomaly.get_location()
         if current_wp_loc.distance(current_loc) > self.distance_from_sidewalk:
-            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+            self.anomaly.set_actor_semantic_tag("Medium_Anomaly")
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
@@ -140,8 +143,8 @@ class Labrador_Anomaly(Anomaly):
         super().on_destroy()
 
 class Baseballbat_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -153,8 +156,8 @@ class Baseballbat_Anomaly(Anomaly):
         super().on_destroy()
 
 class Basketball_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -166,14 +169,14 @@ class Basketball_Anomaly(Anomaly):
         super().on_destroy()
 
 class Person_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, True, False, True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, True, True, False, True)
 
     def handle_semantic_tag(self):
         current_wp_loc = self.map.get_waypoint(self.anomaly.get_location(), project_to_road=True, lane_type=carla.LaneType.Sidewalk).transform.location
         current_loc = self.anomaly.get_location()
         if current_wp_loc.distance(current_loc) > 2:
-            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+            self.anomaly.set_actor_semantic_tag("Medium_Anomaly")
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
@@ -182,23 +185,23 @@ class Person_Anomaly(Anomaly):
         super().on_destroy()
 
 class Tree_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, False, spawn_at_zero=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         pass
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+        self.anomaly.set_actor_semantic_tag("Large_Anomaly")
         return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
 
 class Beer_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -210,8 +213,8 @@ class Beer_Anomaly(Anomaly):
         super().on_destroy()
 
 class Football_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -223,8 +226,8 @@ class Football_Anomaly(Anomaly):
         super().on_destroy()
 
 class Ladder_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True,False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -236,8 +239,8 @@ class Ladder_Anomaly(Anomaly):
         super().on_destroy()
 
 class Mattress_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False,False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -249,8 +252,8 @@ class Mattress_Anomaly(Anomaly):
         super().on_destroy()
 
 class Skateboard_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -262,8 +265,8 @@ class Skateboard_Anomaly(Anomaly):
         super().on_destroy()
 
 class Tire_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True,False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -275,8 +278,8 @@ class Tire_Anomaly(Anomaly):
         super().on_destroy()
 
 class WoodPalette_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False,False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -288,38 +291,36 @@ class WoodPalette_Anomaly(Anomaly):
         super().on_destroy()
 
 class Basketball_Bounce_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
         return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
 
 class Football_Bounce_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
         return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
 
 class StreetLight_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
 
     def handle_semantic_tag(self):
         pass
@@ -331,14 +332,14 @@ class StreetLight_Anomaly(Anomaly):
         super().on_destroy()
 
 class TrashCan_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
 
     def handle_semantic_tag(self):
         current_wp_loc = self.map.get_waypoint(self.anomaly.get_location(), project_to_road=True, lane_type=carla.LaneType.Sidewalk).transform.location
         current_loc = self.anomaly.get_location()
         if current_wp_loc.distance(current_loc) > 3:
-            self.anomaly.set_actor_semantic_tag("Dynamic_Anomaly")
+            self.anomaly.set_actor_semantic_tag("Medium_Anomaly")
 
     def spawn_anomaly(self):
         return super().spawn_anomaly()
@@ -347,8 +348,8 @@ class TrashCan_Anomaly(Anomaly):
         super().on_destroy()
 
 class TrafficLight_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
 
     def handle_semantic_tag(self):
         pass
@@ -360,8 +361,8 @@ class TrafficLight_Anomaly(Anomaly):
         super().on_destroy()
 
 class FlippedCar_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -385,7 +386,7 @@ class FlippedCar_Anomaly(Anomaly):
         anomaly.set_transform(carla.Transform(loc,rot))
         self.world.tick()
         # Set the semantic tag to Static_Anomaly
-        anomaly.set_actor_semantic_tag("Static_Anomaly")
+        anomaly.set_actor_semantic_tag("Large_Anomaly")
         #Make the ego vehicle ignore the flipped car (It's going to crash into it)
         tm:carla.TrafficManager = self.client.get_trafficmanager()
         tm.collision_detection(self.ego_vehicle, anomaly, False)
@@ -395,20 +396,20 @@ class FlippedCar_Anomaly(Anomaly):
         super().on_destroy()
 
 class InstantCarBreak_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         # Spawn this at zero, then if in front of the ego vehicle there's a car, it will be attached to this car, so it'll have it's location
         # (This is done at the blueprint level)
         self.parent = None
         self.tm:carla.TrafficManager = client.get_trafficmanager()
         self.first_run = True
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         # Make the vehicle break after 40 ticks
         if self.first_run and self.tick>=40:
             self.parent.set_autopilot(False)
             self.parent.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
-            self.parent.set_actor_semantic_tag("Static_Anomaly")
+            self.parent.set_actor_semantic_tag("Large_Anomaly")
             self.first_run = False
 
     def spawn_anomaly(self):
@@ -448,10 +449,10 @@ class InstantCarBreak_Anomaly(Anomaly):
         super().on_destroy()
 
 class TrafficLightOff_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.traffic_light = None
         self.vehicles = None
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         # If the traffic light is off, we want to set the semantic tag to Static_Anomaly
@@ -459,7 +460,7 @@ class TrafficLightOff_Anomaly(Anomaly):
             wps = self.traffic_light.get_stop_waypoints()
             for vehicle in self.vehicles:
                 if (vehicle.get_transform().location - wps[0].transform.location).dot(wps[0].transform.get_forward_vector()) >3:
-                    vehicle.set_actor_semantic_tag("Dynamic_Anomaly")
+                    vehicle.set_actor_semantic_tag("Large_Anomaly")
 
     def spawn_anomaly(self):
         print("TrafficLightOff -> Spawning TrafficLightOff anomaly...")
@@ -487,7 +488,7 @@ class TrafficLightOff_Anomaly(Anomaly):
         # Now take one of the red traffic light, turn it off and attach the anomaly to it
         self.traffic_light = traffic_light_group[0]
         self.traffic_light.set_state(carla.TrafficLightState.Off)
-        self.traffic_light.set_actor_semantic_tag("Static_Anomaly")
+        self.traffic_light.set_actor_semantic_tag("Large_Anomaly")
 
         # Now the vehicles are ignoring the traffic light, so they will run as if it was the red light. So take find those vehicles and set them as Dynamic_Anomaly as soon as they start moving
         #in the junction
@@ -535,15 +536,15 @@ class TrafficLightOff_Anomaly(Anomaly):
         self.traffic_light.retag_actor()
 
 class CarThroughRedLight_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.vehicles = []
         self.traffic_light = None
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         wps = self.traffic_light.get_stop_waypoints()
         if (self.vehicles[0].get_transform().location - wps[0].transform.location).dot(wps[0].transform.get_forward_vector()) > 3:
-            self.vehicles[0].set_actor_semantic_tag("Dynamic_Anomaly")
+            self.vehicles[0].set_actor_semantic_tag("Large_Anomaly")
 
     def spawn_anomaly(self):
         print("CarThroughRedLight -> Spawning CarThroughRedLight anomaly...")
@@ -614,10 +615,10 @@ class CarThroughRedLight_Anomaly(Anomaly):
         super().on_destroy()
 
 class RoadSignTwisted_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.old_trf = None
         self.sign = None
-        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
 
     def handle_semantic_tag(self):
         pass
@@ -636,7 +637,7 @@ class RoadSignTwisted_Anomaly(Anomaly):
         anomaly_to_spawn = bp_lip.filter(f"*{self.name}")[0]
         transform = carla.Transform(carla.Location(0, 0, 0), carla.Rotation(0, 0, 0))
         self.anomaly: carla.Actor = self.world.spawn_actor(anomaly_to_spawn, transform, attach_to=self.sign)
-        self.sign.set_actor_semantic_tag("static_anomaly")
+        self.sign.set_actor_semantic_tag("Medium_Anomaly")
         if self.anomaly is None:
             print("RoadSignTwisted -> Failed to spawn anomaly:", self.name)
             return None
@@ -647,11 +648,11 @@ class RoadSignTwisted_Anomaly(Anomaly):
         super().on_destroy()
 
 class RoadSignVandalized_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.possible_anomalies = ["stopdestroyed","stoprusted"]
         self.old_trf = None
         self.sign = None
-        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
 
     def handle_semantic_tag(self):
         pass
@@ -690,8 +691,8 @@ class RoadSignVandalized_Anomaly(Anomaly):
         super().on_destroy()
 
 class Motorcycle_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
 
     def handle_semantic_tag(self):
         pass
@@ -713,8 +714,8 @@ class Motorcycle_Anomaly(Anomaly):
         super().on_destroy()
 
 class GarbageBag_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False,spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -728,10 +729,10 @@ class GarbageBag_Anomaly(Anomaly):
         super().on_destroy()
 
 class GarbageBagWind_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.base_wind = None
         self.right = None
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         front_back = 1
@@ -767,15 +768,15 @@ class GarbageBagWind_Anomaly(Anomaly):
                                 random.uniform(-20, 20))
 
         self.anomaly.add_torque(torque * 5)
-        self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
+        self.anomaly.set_actor_semantic_tag("Medium_Anomaly")
         return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
 
 class BrokenChair_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -789,8 +790,8 @@ class BrokenChair_Anomaly(Anomaly):
         super().on_destroy()
 
 class Bikes_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False,spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -804,8 +805,8 @@ class Bikes_Anomaly(Anomaly):
         super().on_destroy()
 
 class Hubcap_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -819,8 +820,8 @@ class Hubcap_Anomaly(Anomaly):
         super().on_destroy()
 
 class Newspaper_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -834,11 +835,11 @@ class Newspaper_Anomaly(Anomaly):
         super().on_destroy()
 
 class BlowingNewspaper_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.start_tick = 0
         self.base_wind = None
         self.right = None
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         front_back = 1
@@ -867,15 +868,15 @@ class BlowingNewspaper_Anomaly(Anomaly):
         self.right = self.ego_vehicle.get_transform().get_right_vector()
         init_force = carla.Vector3D(self.base_wind.x, self.base_wind.y, self.base_wind.z+0.5).make_unit_vector()
         self.anomaly.add_impulse(init_force)
-        self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
+        self.anomaly.set_actor_semantic_tag("Small_Anomaly")
         return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
 
 class Box_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -889,8 +890,8 @@ class Box_Anomaly(Anomaly):
         super().on_destroy()
 
 class PlasticBottle_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -904,8 +905,8 @@ class PlasticBottle_Anomaly(Anomaly):
         super().on_destroy()
 
 class WineBottle_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -919,8 +920,8 @@ class WineBottle_Anomaly(Anomaly):
         super().on_destroy()
 
 class MetalBottle_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -934,21 +935,21 @@ class MetalBottle_Anomaly(Anomaly):
         super().on_destroy()
 
 class Table_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True, big_mesh=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True,
+                         big_mesh=True)
 
     def handle_semantic_tag(self):
         pass
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
-
         return self.anomaly
 
 class OfficeChair_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True, big_mesh=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True,
+                         big_mesh=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -959,8 +960,9 @@ class OfficeChair_Anomaly(Anomaly):
         super().on_destroy()
 
 class OldStove_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True, big_mesh=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True,
+                         big_mesh=True)
 
     def handle_semantic_tag(self):
         pass
@@ -974,21 +976,22 @@ class OldStove_Anomaly(Anomaly):
         super().on_destroy()
 
 class ShoppingCart_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True, big_mesh=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True,
+                         big_mesh=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
+
 
         return self.anomaly
     def on_destroy(self):
         super().on_destroy()
 
 class Bag_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1002,8 +1005,8 @@ class Bag_Anomaly(Anomaly):
         super().on_destroy()
 
 class Helmet_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1017,8 +1020,8 @@ class Helmet_Anomaly(Anomaly):
         super().on_destroy()
 
 class Hat_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1032,8 +1035,8 @@ class Hat_Anomaly(Anomaly):
         super().on_destroy()
 
 class Crash_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
         self.target_v = None
         self.coll_queue = None
         self.coll_sen = None
@@ -1071,8 +1074,8 @@ class Crash_Anomaly(Anomaly):
             coll_event.other_actor.set_autopilot(False)
             coll_event.actor.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
             coll_event.other_actor.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
-            coll_event.actor.set_actor_semantic_tag("dynamic_anomaly")
-            coll_event.other_actor.set_actor_semantic_tag("dynamic_anomaly")
+            coll_event.actor.set_actor_semantic_tag("Large_Anomaly")
+            coll_event.other_actor.set_actor_semantic_tag("Large_Anomaly")
             print(coll_event)
 
     def spawn_anomaly(self):
@@ -1123,8 +1126,8 @@ class Crash_Anomaly(Anomaly):
         super().on_destroy()
 
 class Bird_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, True, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, True, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1132,15 +1135,15 @@ class Bird_Anomaly(Anomaly):
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
         self.world.tick()
-        self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
+        self.anomaly.set_actor_semantic_tag("Medium_Anomaly")
         return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
 
 class TrafficCone_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1154,13 +1157,13 @@ class TrafficCone_Anomaly(Anomaly):
         super().on_destroy()
 
 class DangerDriver_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.vehicles = []
         self.target_vehicle = None
         self.coll_queue = None
         self.coll_sen = None
         self.tm = None
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_at_zero=True)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         # Make the target vehicle change lane very often
@@ -1180,7 +1183,7 @@ class DangerDriver_Anomaly(Anomaly):
             if coll_event.other_actor.type_id.startswith("vehicle."):
                 coll_event.other_actor.set_autopilot(False)
                 coll_event.other_actor.apply_control(carla.VehicleControl(throttle=0, steer=0, brake=1, hand_brake=True))
-                coll_event.other_actor.set_actor_semantic_tag("static_anomaly")
+                coll_event.other_actor.set_actor_semantic_tag("Large_Anomaly")
 
 
     def spawn_anomaly(self):
@@ -1227,7 +1230,7 @@ class DangerDriver_Anomaly(Anomaly):
         # Make the target vehicle ignore other vehicles 60% of the time
         tm.ignore_vehicles_percentage(self.target_vehicle,80)
 
-        self.target_vehicle.set_actor_semantic_tag("dynamic_anomaly")
+        self.target_vehicle.set_actor_semantic_tag("Large_Anomaly")
 
         #Set up collision sensor
         self.coll_sen: carla.Sensor = attach_collision_sensor(None, self.world, self.client, self.target_vehicle)
@@ -1248,9 +1251,9 @@ class DangerDriver_Anomaly(Anomaly):
         super().on_destroy()
 
 class BillBoard_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.sign = None
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1263,9 +1266,9 @@ class BillBoard_Anomaly(Anomaly):
         super().on_destroy()
 
 class FallenStreetLight_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.sign = None
-        super().__init__(world, client, name, ego_vehicle, False, False, False, True, spawn_at_zero=True)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, True, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         pass
@@ -1277,8 +1280,8 @@ class FallenStreetLight_Anomaly(Anomaly):
         super().on_destroy()
 
 class Book_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1292,8 +1295,8 @@ class Book_Anomaly(Anomaly):
         super().on_destroy()
 
 class Stroller_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -1307,8 +1310,8 @@ class Stroller_Anomaly(Anomaly):
         super().on_destroy()
 
 class FuelCan_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1322,24 +1325,23 @@ class FuelCan_Anomaly(Anomaly):
         super().on_destroy()
 
 class ConstructionBarrier_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True, big_mesh=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True,
+                         big_mesh=True)
 
     def handle_semantic_tag(self):
         pass
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
-
         return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
 
 class ConstructionSite_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1359,8 +1361,8 @@ class ConstructionSite_Anomaly(Anomaly):
         super().on_destroy()
 
 class Suitcase_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1374,8 +1376,8 @@ class Suitcase_Anomaly(Anomaly):
         super().on_destroy()
 
 class CarMirror_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1389,24 +1391,23 @@ class CarMirror_Anomaly(Anomaly):
         super().on_destroy()
 
 class Drone_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, True, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, True, False, False)
 
     def handle_semantic_tag(self):
         pass
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
-        self.anomaly.set_actor_semantic_tag("dynamic_anomaly")
+
         return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
 
 class Umbrella_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1420,8 +1421,8 @@ class Umbrella_Anomaly(Anomaly):
         super().on_destroy()
 
 class TierScooter_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -1435,8 +1436,8 @@ class TierScooter_Anomaly(Anomaly):
         super().on_destroy()
 
 class Scooter_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -1450,8 +1451,8 @@ class Scooter_Anomaly(Anomaly):
         super().on_destroy()
 
 class Brick_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False,)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
 
     def handle_semantic_tag(self):
         pass
@@ -1465,8 +1466,8 @@ class Brick_Anomaly(Anomaly):
         super().on_destroy()
 
 class CarDoor_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1477,8 +1478,8 @@ class CarDoor_Anomaly(Anomaly):
         super().on_destroy()
 
 class Rock_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1489,8 +1490,8 @@ class Rock_Anomaly(Anomaly):
         super().on_destroy()
 
 class KidToy_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1501,8 +1502,8 @@ class KidToy_Anomaly(Anomaly):
         super().on_destroy()
 
 class Tablet_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1513,8 +1514,8 @@ class Tablet_Anomaly(Anomaly):
         super().on_destroy()
 
 class Laptop_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1525,8 +1526,8 @@ class Laptop_Anomaly(Anomaly):
         super().on_destroy()
 
 class Smartphone_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1537,8 +1538,8 @@ class Smartphone_Anomaly(Anomaly):
         super().on_destroy()
 
 class HoodCar_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1549,8 +1550,8 @@ class HoodCar_Anomaly(Anomaly):
         super().on_destroy()
 
 class TrunkCar_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1561,8 +1562,8 @@ class TrunkCar_Anomaly(Anomaly):
         super().on_destroy()
 
 class Mannequin_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1573,60 +1574,60 @@ class Mannequin_Anomaly(Anomaly):
         super().on_destroy()
 
 class Television_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
+
 
         return self.anomaly
     def on_destroy(self):
         super().on_destroy()
 
 class WashingMachine_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
+
 
         return self.anomaly
     def on_destroy(self):
         super().on_destroy()
 
 class Fridge_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
+
 
         return self.anomaly
     def on_destroy(self):
         super().on_destroy()
 
 class PileSand_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
+
 
         return self.anomaly
     def on_destroy(self):
         super().on_destroy()
 
 class Shovel_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1637,8 +1638,8 @@ class Shovel_Anomaly(Anomaly):
         super().on_destroy()
 
 class Rake_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1649,8 +1650,8 @@ class Rake_Anomaly(Anomaly):
         super().on_destroy()
 
 class DeliveryBox_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1661,21 +1662,21 @@ class DeliveryBox_Anomaly(Anomaly):
         super().on_destroy()
 
 class FallenTree_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, True, False, False, True, spawn_at_zero=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True, spawn_at_zero=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
-
+        if self.anomaly is not None:
+            self.anomaly.set_actor_semantic_tag("Large_Anomaly")
         return self.anomaly
     def on_destroy(self):
         super().on_destroy()
 
 class Oven_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1686,8 +1687,8 @@ class Oven_Anomaly(Anomaly):
         super().on_destroy()
 
 class WheelChair_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, False, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1698,8 +1699,8 @@ class WheelChair_Anomaly(Anomaly):
         super().on_destroy()
 
 class Shoe_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1710,8 +1711,8 @@ class Shoe_Anomaly(Anomaly):
         super().on_destroy()
 
 class Glove_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1722,8 +1723,8 @@ class Glove_Anomaly(Anomaly):
         super().on_destroy()
 
 class Hammer_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1734,8 +1735,8 @@ class Hammer_Anomaly(Anomaly):
         super().on_destroy()
 
 class Wrench_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1746,8 +1747,8 @@ class Wrench_Anomaly(Anomaly):
         super().on_destroy()
 
 class Drill_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1758,8 +1759,8 @@ class Drill_Anomaly(Anomaly):
         super().on_destroy()
 
 class Saw_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1770,8 +1771,8 @@ class Saw_Anomaly(Anomaly):
         super().on_destroy()
 
 class Sunglasses_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1782,8 +1783,8 @@ class Sunglasses_Anomaly(Anomaly):
         super().on_destroy()
 
 class Wallet_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1794,8 +1795,8 @@ class Wallet_Anomaly(Anomaly):
         super().on_destroy()
 
 class CoffeeCup_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1806,21 +1807,21 @@ class CoffeeCup_Anomaly(Anomaly):
         super().on_destroy()
 
 class Fence_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
+
 
         return self.anomaly
     def on_destroy(self):
         super().on_destroy()
 
 class PizzaBox_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1831,8 +1832,8 @@ class PizzaBox_Anomaly(Anomaly):
         super().on_destroy()
 
 class ToyCar_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1843,8 +1844,8 @@ class ToyCar_Anomaly(Anomaly):
         super().on_destroy()
 
 class RemoteControl_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1855,8 +1856,8 @@ class RemoteControl_Anomaly(Anomaly):
         super().on_destroy()
 
 class CD_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1867,8 +1868,8 @@ class CD_Anomaly(Anomaly):
         super().on_destroy()
 
 class PowerBank_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1879,8 +1880,8 @@ class PowerBank_Anomaly(Anomaly):
         super().on_destroy()
 
 class Deodorant_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1891,8 +1892,8 @@ class Deodorant_Anomaly(Anomaly):
         super().on_destroy()
 
 class Lighter_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1903,8 +1904,8 @@ class Lighter_Anomaly(Anomaly):
         super().on_destroy()
 
 class Bowl_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1915,8 +1916,8 @@ class Bowl_Anomaly(Anomaly):
         super().on_destroy()
 
 class Bucket_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1927,8 +1928,8 @@ class Bucket_Anomaly(Anomaly):
         super().on_destroy()
 
 class Speaker_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1939,8 +1940,8 @@ class Speaker_Anomaly(Anomaly):
         super().on_destroy()
 
 class Guitar_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1951,8 +1952,8 @@ class Guitar_Anomaly(Anomaly):
         super().on_destroy()
 
 class Fan_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1963,8 +1964,8 @@ class Fan_Anomaly(Anomaly):
         super().on_destroy()
 
 class Pillow_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1975,8 +1976,8 @@ class Pillow_Anomaly(Anomaly):
         super().on_destroy()
 
 class Trolley_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False, spawn_on_right=True)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
@@ -1987,8 +1988,8 @@ class Trolley_Anomaly(Anomaly):
         super().on_destroy()
 
 class Dumbell_Anomaly(Anomaly):
-    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle):
-        super().__init__(world, client, name, ego_vehicle, False, False, True, False)
+    def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False)
     def handle_semantic_tag(self):
         pass
     def spawn_anomaly(self):
