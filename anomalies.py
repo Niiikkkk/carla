@@ -7,13 +7,14 @@ from typing import Optional
 
 from fontTools.misc.cython import returns
 from pandas.io.formats.format import return_docstring
+from scipy.stats import landau
 
 from utils import *
 
 class Anomaly:
     def __init__(self, world: carla.World, client: carla.Client, name, ego_vehicle: carla.Actor, size, is_dynamic,
                  is_character, can_be_rotated, anomaly_in_waypoint, spawn_at_zero=False, spawn_on_right=False,
-                 big_mesh=False):
+                 big_mesh=False, skip_check=False):
         self.world = world
         self.client = client
         self.ego_vehicle = ego_vehicle
@@ -29,13 +30,11 @@ class Anomaly:
         self.anomaly: carla.Actor = None
         self.tick = 0
         self.size = size
+        self.skip_check = skip_check
 
     def spawn_anomaly(self):
-        print("Spawning anomaly...", self.name)
-        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.is_dynamic, self.is_character, self.can_be_rotated, self.size, self.anomaly_in_waypoint, self.spawn_at_zero, self.spawn_on_right, self.big_mesh)
+        anomaly = spawn_anomaly(self.world, self.client, self.ego_vehicle, self.name, self.is_dynamic, self.is_character, self.can_be_rotated, self.size, self.anomaly_in_waypoint, self.spawn_at_zero, self.spawn_on_right, self.big_mesh, self.skip_check)
         self.anomaly = anomaly
-        if self.anomaly:
-            print("Anomaly Spawned!")
         return anomaly
 
     def spawn_vehicles(self, num, start_point: carla.Waypoint):
@@ -50,8 +49,8 @@ class Anomaly:
                 if wp.lane_change == carla.LaneChange.NONE:
                     # No lane change, so spawn vehicles in the same lane
                     location = wp.next(random.uniform(5, 20))[0].transform.location
-                    location.z += 0.2
-                    transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
+                    location.z = 0.6
+                    transform = carla.Transform(location, wp.transform.rotation)
                     v = random.choice(vehicles)
                     while v.id == "vehicle.nissan.patrol":
                         v = random.choice(vehicles)
@@ -71,7 +70,7 @@ class Anomaly:
                     # Spawn vehicle in the chosen lane
                     location = wp.next(random.uniform(5, 20))[0].transform.location
                     location.z += 0.2
-                    transform = carla.Transform(location, self.ego_vehicle.get_transform().rotation)
+                    transform = carla.Transform(location, wp.transform.rotation)
                     v = random.choice(vehicles)
                     while v.id == "vehicle.nissan.patrol":
                         v = random.choice(vehicles)
@@ -189,11 +188,15 @@ class Tree_Anomaly(Anomaly):
         super().__init__(world, client, name, ego_vehicle, size, True, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
-        pass
+        if self.tick == 1:
+            self.anomaly.set_simulate_physics(True)
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
         self.anomaly.set_actor_semantic_tag("Large_Anomaly")
+        # This anomaly is handled in the blueprint, and a impulse is applied. In the main, we wait 1 sec in order to make the objects adjust their positions
+        # , but this anomlay would fall before the simulation starts, so disable the physics simulation, then after 1 tick enable it
+        self.anomaly.set_simulate_physics(False)
         return self.anomaly
 
     def on_destroy(self):
@@ -292,13 +295,17 @@ class WoodPalette_Anomaly(Anomaly):
 
 class Basketball_Bounce_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
-        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, skip_check=True)
 
     def handle_semantic_tag(self):
-        pass
+        if self.tick == 1:
+            self.anomaly.set_simulate_physics(True)
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
+        # This anomaly is handled in the blueprint, and a impulse is applied. In the main, we wait 1 sec in order to make the objects adjust their positions
+        # , but this anomlay would fall before the simulation starts, so disable the physics simulation, then after 1 tick enable it
+        self.anomaly.set_simulate_physics(False)
         return self.anomaly
 
     def on_destroy(self):
@@ -309,10 +316,14 @@ class Football_Bounce_Anomaly(Anomaly):
         super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
-        pass
+        if self.tick == 1:
+            self.anomaly.set_simulate_physics(True)
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
+        # This anomaly is handled in the blueprint, and a impulse is applied. In the main, we wait 1 sec in order to make the objects adjust their positions
+        #, but this anomlay would fall before the simulation starts, so disable the physics simulation, then after 1 tick enable it
+        self.anomaly.set_simulate_physics(False)
         return self.anomaly
 
     def on_destroy(self):
@@ -323,10 +334,15 @@ class StreetLight_Anomaly(Anomaly):
         super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
 
     def handle_semantic_tag(self):
-        pass
+        if self.tick == 1:
+            self.anomaly.get_parent().set_simulate_physics(True)
 
     def spawn_anomaly(self):
-        return super().spawn_anomaly()
+        self.anomaly = super().spawn_anomaly()
+        # This anomaly is handled in the blueprint, and a impulse is applied. In the main, we wait 1 sec in order to make the objects adjust their positions
+        # , but this anomlay would fall before the simulation starts, so disable the physics simulation, then after 1 tick enable it
+        self.anomaly.get_parent().set_simulate_physics(False)
+        return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
@@ -352,10 +368,13 @@ class TrafficLight_Anomaly(Anomaly):
         super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
 
     def handle_semantic_tag(self):
-        pass
+        if self.tick == 1:
+            self.anomaly.set_simulate_physics(True)
 
     def spawn_anomaly(self):
-        return super().spawn_anomaly()
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.set_simulate_physics(False)
+        return self.anomaly
 
     def on_destroy(self):
         super().on_destroy()
@@ -464,7 +483,7 @@ class TrafficLightOff_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         print("TrafficLightOff -> Spawning TrafficLightOff anomaly...")
-        traffic_light = self.find_obj_in_front_ego_vehicle("traffic.traffic_light", min_distance=10, max_distance=50, angle=0.95)
+        traffic_light = self.find_obj_in_front_ego_vehicle("traffic.traffic_light", min_distance=0, max_distance=50, angle=0.8)
         if traffic_light is None:
             print("TrafficLightOff -> No traffic light found in front of the ego vehicle to attach the anomaly to.")
             return None
@@ -548,7 +567,7 @@ class CarThroughRedLight_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         print("CarThroughRedLight -> Spawning CarThroughRedLight anomaly...")
-        traffic_light = self.find_obj_in_front_ego_vehicle("traffic.traffic_light", min_distance=10, max_distance=50, angle=0.95)
+        traffic_light = self.find_obj_in_front_ego_vehicle("traffic.traffic_light", min_distance=0, max_distance=50, angle=0.8)
         if traffic_light is None:
             print("CarThroughRedLight -> No traffic light found in front of the ego vehicle to attach the anomaly to.")
             return None
@@ -591,7 +610,26 @@ class CarThroughRedLight_Anomaly(Anomaly):
                 wps[0].transform.get_forward_vector() * -1) > 0.7, self.vehicles))
         # If there's no vehicle in front of the traffic light, we can't make the anomaly happen, so close the execution
         if len(self.vehicles) == 0:
-            print("CarThroughRedLight -> No vehicle found in front of the traffic light in order to make the anomaly happen.")
+            print("CarThroughRedLight -> No vehicle found in front of the traffic light in order to make the anomaly happen. Spawning some...")
+            self.spawn_vehicles(3-len(self.vehicles), wps[0].previous(21)[0])
+            self.world.tick()
+            vehicles = self.find_objs_in_front_ego_vehicle("vehicle.*", min_distance=0, max_distance=60, angle=0)
+
+
+            # Filter the vehicles that are going in the same direction of the waypoint, so the ones that are in front of the traffic light
+            filtered_vehicles = list(
+                filter(lambda v: v.get_transform().get_forward_vector().dot(wps[0].transform.get_forward_vector()) > 0.9,
+                       vehicles))
+
+            self.vehicles = list(filter(lambda v: (v.get_transform().location - wps[0].transform.location).dot(
+                wps[0].transform.get_forward_vector()) < 3, filtered_vehicles))
+
+            self.vehicles = list(
+                filter(lambda v: (v.get_transform().location - wps[0].transform.location).make_unit_vector().dot(
+                    wps[0].transform.get_forward_vector() * -1) > 0.7, self.vehicles))
+
+        if len(self.vehicles) == 0:
+            print("CarThroughRedLight -> Still no vehicle found in front of the traffic light in order to make the anomaly happen. Aborting...")
             return None
 
         #Now we sort the vehicles by distance to the waypoint, so the first one is the closest to the waypoint
@@ -715,7 +753,7 @@ class Motorcycle_Anomaly(Anomaly):
 
 class GarbageBag_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
-        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_on_right=True)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass
@@ -1217,9 +1255,9 @@ class DangerDriver_Anomaly(Anomaly):
 
         tm:carla.TrafficManager = self.client.get_trafficmanager()
         # Now self.target_vehicle will always be close to the other vehicles
-        tm.distance_to_leading_vehicle(self.target_vehicle, 1)
+        tm.distance_to_leading_vehicle(self.target_vehicle, 0.5)
         # Make the target vehicle go very fast
-        tm.vehicle_percentage_speed_difference(self.target_vehicle,-100)
+        tm.vehicle_percentage_speed_difference(self.target_vehicle,-50)
         # Make the target vehicle ignore the traffic lights 60% of the time
         tm.ignore_lights_percentage(self.target_vehicle,60)
         # Make the target vehicle ignore signs 60% of the time
@@ -1229,6 +1267,8 @@ class DangerDriver_Anomaly(Anomaly):
         # tm.random_right_lanechange_percentage(self.target_vehicle, 80)
         # Make the target vehicle ignore other vehicles 60% of the time
         tm.ignore_vehicles_percentage(self.target_vehicle,80)
+        # Make the target vehicle drive not in the center of the lane
+        tm.vehicle_lane_offset(self.target_vehicle, random.uniform(-1,1))
 
         self.target_vehicle.set_actor_semantic_tag("Large_Anomaly")
 
@@ -1253,13 +1293,16 @@ class DangerDriver_Anomaly(Anomaly):
 class BillBoard_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
         self.sign = None
-        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
-        pass
+        if self.tick == 1:
+            self.anomaly.get_parent().set_simulate_physics(True)
 
     def spawn_anomaly(self):
-        return super().spawn_anomaly()
+        self.anomaly = super().spawn_anomaly()
+        self.anomaly.get_parent().set_simulate_physics(False)
+        return self.anomaly
 
 
     def on_destroy(self):

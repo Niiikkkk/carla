@@ -6,8 +6,7 @@ import carla
 
 def find_size_anomaly():
     list_static_anomalies = [
-        "labrador", "person", "bird", "dangerdriver", "crash", "drone", "streetlight", "trashcan", "trafficlight", "trafficlightoff",
-        "garbagebagwind", "billboard"
+        "hat"
     ]
 
     client: carla.Client = carla.Client("localhost", 2000)
@@ -124,7 +123,7 @@ def benchmark():
         "scooter", "shoppingcart", "table", "tierscooter",
         #DYN
         #"dangerdriver", "crash", "streetlight", "tree", "trafficlight", "trafficlightoff",
-        #"billboard", "instantcarbreak", "carthroughred"
+        #"billboard", "instantcarbreak", "carthroughredlight"
     ]
 
     list_dynamic_anomalies = [
@@ -136,24 +135,19 @@ def benchmark():
     print("Total Anomalies: ", len(list_tiny_anomalies) + len(list_small_anomalies) + len(list_medium_anomalies) + len(list_large_anomalies))
 
     args.semantic = True
-    #args.rgb = True
-    #args.depth = True
-    # args.lidar = True
-    # args.radar = True
-    #args.instance = True
-    # args.lidar_semantic = True
-
-    #Modify randomly
+    args.rgb = True
+    args.depth = True
+    args.lidar = True
+    args.radar = True
+    args.instance = True
+    args.lidar_semantic = True
     number_of_runs = 1
-    # Modify randomly
-    args.seed = 42
+    seed = 42
     args.log = True
-
     # NOTE: fps and sensor_tick are linked. If I have 20 fps, then the tick will be every 1/20 = 0.05 seconds. So the sensor tick should be >= 0.05.
     # If the set sensor_tick 0.1 with an FPS of 20, the sensor will capture data every 2 frames.
     args.fps = 20
-    args.sensor_tick = '0.1'
-
+    args.sensor_tick = '0.05'
     args.hybrid = True
 
 
@@ -166,12 +160,9 @@ def benchmark():
         # 5:  {"fps": 60, "sensor_tick": '0.017'},
     }
 
-    # for run in range(number_of_runs):
-    for run in runs:
-
-        args.fps = runs[run]["fps"]
-        args.sensor_tick = runs[run]["sensor_tick"]
-
+    for run in range(number_of_runs):
+        random.seed(seed+run)
+        args.seed = seed+run
         number_of_tiny_anomalies = random.randint(1, 3)
         tiny_anomalies = random.sample(list_tiny_anomalies, number_of_tiny_anomalies)
         tiny = build_arg_anomalies(tiny_anomalies,"tiny")
@@ -180,7 +171,7 @@ def benchmark():
         small_anomalies = random.sample(list_small_anomalies, number_of_small_anomalies)
         small = build_arg_anomalies(small_anomalies,"small")
 
-        number_of_medium_anomalies = random.randint(1, 3)
+        number_of_medium_anomalies = random.randint(0, 2)
         medium_anomalies = random.sample(list_medium_anomalies, number_of_medium_anomalies)
         medium = build_arg_anomalies(medium_anomalies,"medium")
 
@@ -189,12 +180,7 @@ def benchmark():
         large = build_arg_anomalies(large_anomalies,"large")
 
 
-        #args.anomalies = tiny + small + medium + large
-
-        #TEST "tree", "trafficlight", "trafficlightoff",
-        # "billboard", "carthroughred"
-        tmp = build_arg_anomalies(["billboard"],"medium")
-        args.anomalies = tmp
+        args.anomalies = tiny + small + medium + large
 
         #randomly select number of vehicles
         #args.number_of_vehicles = random.randint(10, 40)
@@ -204,9 +190,9 @@ def benchmark():
         #args.number_of_pedestrians = random.randint(10, 40)
         args.number_of_pedestrians = 0
 
-        #args.spawn_points = [carla.Transform(carla.Location(x=14.13009155,y=69.71400391,z=0.6), carla.Rotation(0,0,0))]
+        #args.spawn_points = [carla.Transform(carla.Location(x=-48.81999023,y=-7.79507507,z=0.6), carla.Rotation(0,90,0))]
 
-        print(f"Running run {run+1} / {len(runs)} with the following parameters:")
+        print(f"Running run {run+1} / {number_of_runs} with the following parameters:")
         print(args)
 
         start_time = time.time()

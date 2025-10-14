@@ -2,27 +2,29 @@ import argparse
 
 from sensors import *
 from anomalies import *
-
-def log(message, args):
-    print("[LOG] ", message, args)
+import logging
+from logging import info,warning,error
 
 def main(args):
-
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(levelname)s: %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S',
+    )
     if args.log:
-        log("Seed: ", args.seed)
-        log("Anomalies: ", args.anomalies)
-        log("Number of vehicles: ", args.number_of_vehicles)
-        log("Number of pedestrians: ", args.number_of_pedestrians)
-        log("Semantic sensor: ", args.semantic)
-        log("RGB sensor: ", args.rgb)
-        log("Depth sensor: ", args.depth)
-        log("Lidar sensor: ", args.lidar)
-        log("Lidar Semantic sensor: ", args.lidar_semantic)
-        log("Radar sensor: ", args.radar)
-        log("Instance Segmentation sensor: ", args.instance)
-        log("FPS: ", args.fps)
-        log("Sensor tick: ", args.sensor_tick)
-        log("Hybrid mode: ", args.hybrid)
+        info("Seed: %s", args.seed)
+        info("Anomalies: %s", args.anomalies)
+        info("Number of vehicles: %s", args.number_of_vehicles)
+        info("Number of pedestrians: %s", args.number_of_pedestrians)
+        info("Semantic sensor: %s", args.semantic)
+        info("RGB sensor: %s", args.rgb)
+        info("Depth sensor: %s", args.depth)
+        info("Lidar sensor: %s", args.lidar)
+        info("Lidar Semantic sensor: %s", args.lidar_semantic)
+        info("Radar sensor: %s", args.radar)
+        info("Instance Segmentation sensor: %s", args.instance)
+        info("FPS: %s", args.fps)
+        info("Sensor tick: %s", args.sensor_tick)
+        info("Hybrid mode: %s", args.hybrid)
 
     client:carla.Client = carla.Client('localhost', 2000)
     world:carla.World = client.get_world()
@@ -36,7 +38,7 @@ def main(args):
     # In hybrid mode, the physics engine is used only for the vehicles that are in a radious of 50 meters, this is
     # useful for computational efficiency
     if args.hybrid:
-        print("Activating hybrid mode")
+        info("Activating hybrid mode")
         tm.set_hybrid_physics_mode(True)
         tm.set_hybrid_physics_radius(50)
     simulation_time_for_tick = 1/args.fps
@@ -60,6 +62,7 @@ def main(args):
     spectator:carla.Actor = world.get_spectator()
 
     for run in range(args.number_of_runs):
+        info(f"Starting run {run+1}/{args.number_of_runs}")
         try:
 
             anomalies = []
@@ -83,11 +86,12 @@ def main(args):
                     anomaly_name = str_anomaly[0]
                     size = str_anomaly[1]
                     anomaly_object = generate_anomaly_object(world, client, ego_vehicle, anomaly_name, size)
-                    #world.tick()
+                    info("Spawning anomaly: " + str_anomaly[0] + " of size " + str(size))
                     anomaly: carla.Actor = anomaly_object.spawn_anomaly()
                     if anomaly is None:
-                        print(str_anomaly[0] + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
+                        warning(str_anomaly[0] + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
                     if anomaly is not None:
+                        info(f"Anomaly {anomaly_name} spawned")
                         world.tick()
                         anomalies.append(anomaly_object)
                 if len(anomalies) == 0:
@@ -116,11 +120,17 @@ def main(args):
                 #There's also the flipped car anomaly that spawn a vehicle, we don't what to set autopilot to it
                 if not vehicle.id in anomaly_instances:
                     vehicle.set_autopilot(True)
+
+
+
+
             #With a for, it runs N times the simulation
             # 0.05 is the simulation run for each tick.
             loops = args.run_time / simulation_time_for_tick
+            total_frames = 0
             for i in range(int(loops)):
                 world.tick()
+                total_frames += 1
                 if args.anomalies:
                     for anomaly_obj in anomalies:
                         anomaly_obj.tick += 1
@@ -138,13 +148,13 @@ def main(args):
                         for anomaly_obj in anomalies:
                             # Check if the anomaly is the one collided with
                             if coll_event.other_actor.id == anomaly_obj.anomaly.id:
-                                print(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
+                                info(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
                                 flag = True
                                 break
                             # If the anomaly is just "attached" to the parent actor, check if the parent actor is the one collided with
                             if anomaly_obj.anomaly.get_parent() is not None:
                                 if coll_event.other_actor.id == anomaly_obj.anomaly.get_parent().id:
-                                    print(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
+                                    info(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
                                     flag = True
                                     break
                         if flag:
@@ -174,7 +184,7 @@ def main(args):
                                 more_distance_anomaly = anomaly_obj.anomaly
                     # Compute the difference vector and the dot product
                     if more_distance > 0:
-                        print(f"Ego vehicle passed the furthest anomaly {more_distance_anomaly}, stopping simulation...")
+                        info(f"Ego vehicle passed the furthest anomaly {more_distance_anomaly}, stopping simulation...")
                         break
                     for anomaly_obj in anomalies:
                         anomaly_obj.handle_semantic_tag()
@@ -183,17 +193,18 @@ def main(args):
                 handle_sensor_data(args, run, sensors)
 
         except KeyboardInterrupt:
-            print("Simulation interrupted by user.")
+            error("Simulation interrupted by user.", exc_info=True)
         except Exception as e:
-            print(f"An error occurred: {e}")
-            print("Simulation failed. Interrupting...")
+            error(f"An error occurred: {e}", exc_info=True)
+            error("Simulation failed. Interrupting...", exc_info=True)
         finally:
             # Handle the anomalies
             if args.anomalies:
                 for anomaly_obj in anomalies:
                     anomaly_obj.on_destroy()
             clean_up(args,world,client,tm,sensors)
-            print("End of simulation")
+            info("Total frames: " + str(total_frames))
+            info("End of simulation")
 
 
 def handle_sensor_data(args, run, sensors):
@@ -204,43 +215,43 @@ def handle_sensor_data(args, run, sensors):
 
 def set_up_sensors(args, client, ego_vehicle, sensors, world):
     if args.rgb:
-        print("Setting up RGB camera")
+        info("Setting up RGB camera")
         rgb_sen: carla.Sensor = attach_rbgcamera(args, world, client, ego_vehicle)
         rgb_queue = deque(maxlen=1)
         rgb_sen.listen(lambda data: rgb_queue.append(data))
         sensors.append(RGB_Sensor(rgb_queue,rgb_sen))
     if args.lidar:
-        print("Setting up LIDAR sensor")
+        info("Setting up LIDAR sensor")
         lidar_sen: carla.Sensor = attach_lidar(args, world, client, ego_vehicle)
         lidar_queue = deque(maxlen=1)
         lidar_sen.listen(lambda data: lidar_queue.append(data))
         sensors.append(Lidar_Sensor(lidar_queue,lidar_sen))
     if args.semantic:
-        print("Setting up Semantic Segmentation camera")
+        info("Setting up Semantic Segmentation camera")
         semantic_sen: carla.Sensor = attach_semantic_camera(args, world, client, ego_vehicle)
         semantic_queue = deque(maxlen=1)
         semantic_sen.listen(lambda data: semantic_queue.append(data))
         sensors.append(Semantic_Sensor(semantic_queue,semantic_sen))
     if args.lidar_semantic:
-        print("Setting up Semantic LIDAR sensor")
+        info("Setting up Semantic LIDAR sensor")
         lidar_semantic: carla.Sensor = attach_semantic_lidar(args, world, client, ego_vehicle)
         lidar_semantic_queue = deque(maxlen=1)
         lidar_semantic.listen(lambda data: lidar_semantic_queue.append(data))
         sensors.append(Semantic_Lidar_Sensor(lidar_semantic_queue,lidar_semantic))
     if args.radar:
-        print("Setting up Radar sensor")
+        info("Setting up Radar sensor")
         radar_sen: carla.Sensor = attach_radar(args, world, client, ego_vehicle)
         radar_queue = deque(maxlen=1)
         radar_sen.listen(lambda data: radar_queue.append(data))
         sensors.append(Radar_Sensor(radar_queue,radar_sen))
     if args.depth:
-        print("Setting up Depth camera")
+        info("Setting up Depth camera")
         depth_sen: carla.Sensor = attach_depth_camera(args, world, client, ego_vehicle)
         depth_queue = deque(maxlen=1)
         depth_sen.listen(lambda data: depth_queue.append(data))
         sensors.append(Depth_Sensor(depth_queue,depth_sen))
     if args.instance:
-        print("Setting up Instance Segmentation camera")
+        info("Setting up Instance Segmentation camera")
         instance_sen: carla.Sensor = attach_instance_camera(args, world, client, ego_vehicle)
         instance_queue = deque(maxlen=1)
         instance_sen.listen(lambda data: instance_queue.append(data))
@@ -455,7 +466,7 @@ def generate_anomaly_object(world, client, ego_vehicle, name, size):
         return Dumbell_Anomaly(world, client, name, ego_vehicle,size)
     if name == "trolley":
         return Trolley_Anomaly(world, client, name, ego_vehicle,size)
-    print("Anomaly " + name + " not found, returning None")
+    warning("Anomaly " + name + " not found, returning None")
     return None
 
 

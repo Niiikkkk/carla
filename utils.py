@@ -491,6 +491,11 @@ def save_semantic_lidar(lidar_measurements,anomaly_name,run):
         #anomalies
     (193, 71, 71), # Static_Anomaly = 30
     (102, 102, 255), # Dynamic_Anomaly = 31
+    (175, 83, 83), # Animal = 32
+    (232, 188, 188), # Tinyanomaly = 33
+    (229, 137, 137), # Smallanomaly = 34
+    (189, 47, 47), # Mediumanomaly = 35
+    (131, 7, 7), # Largeanomaly = 36
     ]) / 255.0
 
     data = np.frombuffer(lidar_measurements.raw_data, dtype=np.dtype([
@@ -565,7 +570,7 @@ def view_lidar(lidar_name):
     pcd = o3d.io.read_point_cloud("output/lidar/",lidar_name)
     o3d.visualization.draw_geometries([pcd])
 
-def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,size,anomaly_in_waypoint=True,spawn_at_zero=False,spawn_on_right=False,big_mesh=False):
+def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_rotated,size,anomaly_in_waypoint=True,spawn_at_zero=False,spawn_on_right=False,big_mesh=False,skip_check=False):
     """Spawn an anomaly in the CARLA simulator. The anomaly will have the same rotation of the ego vehicle
     Args:
         world (carla.World): The CARLA world object.
@@ -619,6 +624,9 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
                 wp = map.get_waypoint(location, lane_type=carla.LaneType.Shoulder)
                 location.x = wp.transform.location.x
                 location.y = wp.transform.location.y
+
+            if skip_check:
+                break
 
             extent = anomaly_tmp.bounding_box.extent
             #The extent is half the size of the bounding box, so we need to multiply by 2 to get the full size
@@ -678,7 +686,7 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         # If is a char, 1 is ok
         transform.location.z = 1
     else:
-        if not spawn_at_zero:
+        if not spawn_at_zero and not skip_check:
             #Otherwise compute the z coordinate based on the bounding box of the object
             transform.location.z = 10
             # We set z = 10, but is too high, so we need to adjust it to be on the ground
@@ -698,12 +706,10 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
             # Get the verteces of the bounding box and get the lowest z coordinate
             vertices = anomaly_tmp.bounding_box.get_world_vertices(transform)
             min_z = min([vertex.z for vertex in vertices])
-            print(prop, ground_z , min_z)
             # Calculate the difference between the lowest point of the object and the ground level
             diff = min_z - ground_z
             # Adjust the z coordinate of the object
             transform.location.z = transform.location.z - diff + 0.15
-            print(transform.location.z)
 
 
     if anomaly_in_waypoint:
@@ -712,9 +718,9 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
         transform.location.y = wp.transform.location.y
 
     #We destroy the test anomaly and spawn the real one, with the right transform
-    if not spawn_at_zero:
+    if not spawn_at_zero and not skip_check:
         anomaly_tmp.destroy()
-    world.tick()
+        world.tick()
     anomaly_actor = world.try_spawn_actor(anomaly, transform)
 
     if anomaly_actor is None:
