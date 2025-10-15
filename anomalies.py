@@ -193,10 +193,11 @@ class Tree_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.anomaly.set_actor_semantic_tag("Large_Anomaly")
-        # This anomaly is handled in the blueprint, and a impulse is applied. In the main, we wait 1 sec in order to make the objects adjust their positions
-        # , but this anomlay would fall before the simulation starts, so disable the physics simulation, then after 1 tick enable it
-        self.anomaly.set_simulate_physics(False)
+        if self.anomaly is not None:
+            self.anomaly.set_actor_semantic_tag("Large_Anomaly")
+            # This anomaly is handled in the blueprint, and a impulse is applied. In the main, we wait 1 sec in order to make the objects adjust their positions
+            # , but this anomlay would fall before the simulation starts, so disable the physics simulation, then after 1 tick enable it
+            self.anomaly.set_simulate_physics(False)
         return self.anomaly
 
     def on_destroy(self):
@@ -341,7 +342,8 @@ class StreetLight_Anomaly(Anomaly):
         self.anomaly = super().spawn_anomaly()
         # This anomaly is handled in the blueprint, and a impulse is applied. In the main, we wait 1 sec in order to make the objects adjust their positions
         # , but this anomlay would fall before the simulation starts, so disable the physics simulation, then after 1 tick enable it
-        self.anomaly.get_parent().set_simulate_physics(False)
+        if self.anomaly is not None:
+            self.anomaly.get_parent().set_simulate_physics(False)
         return self.anomaly
 
     def on_destroy(self):
@@ -365,7 +367,7 @@ class TrashCan_Anomaly(Anomaly):
 
 class TrafficLight_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
-        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         if self.tick == 1:
@@ -373,7 +375,8 @@ class TrafficLight_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.anomaly.set_simulate_physics(False)
+        if self.anomaly is not None:
+            self.anomaly.set_simulate_physics(False)
         return self.anomaly
 
     def on_destroy(self):
@@ -773,40 +776,40 @@ class GarbageBagWind_Anomaly(Anomaly):
         super().__init__(world, client, name, ego_vehicle, size, False, False, True, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
-        front_back = 1
-        if random.random() < 0.2:
-            front_back = -1
-        base_wind = self.base_wind * front_back
-        theta = random.uniform(-math.radians(90), math.radians(90))
-        dir_x = base_wind.x * math.cos(theta) + self.right.x * math.sin(theta)
-        dir_y = base_wind.y * math.cos(theta) + self.right.y * math.sin(theta)
-        vertical = random.uniform(-1.5, 2.5)
+        if self.tick == 1:
+            self.base_wind = random.choice([self.ego_vehicle.get_transform().get_forward_vector(),
+                                            self.ego_vehicle.get_transform().get_right_vector() * -1])
+            self.right = self.ego_vehicle.get_transform().get_right_vector()
+            # In case the base_wind is the right vector, we want to make sure that the right vector is not the same as the base_wind
+            if self.base_wind.dot(self.right) != 0:
+                self.right = self.ego_vehicle.get_transform().get_forward_vector()
+            self.anomaly.add_impulse(self.base_wind * 5)
+            torque = carla.Vector3D(random.uniform(-50, 50),
+                                    random.uniform(-50, 50),
+                                    random.uniform(-20, 20))
 
-        force = carla.Vector3D(dir_x, dir_y, vertical)
+            self.anomaly.add_torque(torque * 5)
+        else:
+            front_back = 1
+            if random.random() < 0.2:
+                front_back = -1
+            base_wind = self.base_wind * front_back
+            theta = random.uniform(-math.radians(90), math.radians(90))
+            dir_x = base_wind.x * math.cos(theta) + self.right.x * math.sin(theta)
+            dir_y = base_wind.y * math.cos(theta) + self.right.y * math.sin(theta)
+            vertical = random.uniform(-1.5, 2.5)
 
-        torque = carla.Vector3D(random.uniform(-50, 50),
-                                random.uniform(-50, 50),
-                                random.uniform(-20, 20))
+            force = carla.Vector3D(dir_x, dir_y, vertical)
 
-        self.anomaly.add_torque(torque * 5)
-        self.anomaly.add_force(force * random.uniform(5, 8))
+            torque = carla.Vector3D(random.uniform(-50, 50),
+                                    random.uniform(-50, 50),
+                                    random.uniform(-20, 20))
+
+            self.anomaly.add_torque(torque * 5)
+            self.anomaly.add_force(force * random.uniform(5, 8))
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.world.tick()
-        self.base_wind = random.choice([self.ego_vehicle.get_transform().get_forward_vector(),
-                                       self.ego_vehicle.get_transform().get_right_vector() * -1])
-        self.right = self.ego_vehicle.get_transform().get_right_vector()
-        # In case the base_wind is the right vector, we want to make sure that the right vector is not the same as the base_wind
-        if self.base_wind.dot(self.right) != 0:
-            self.right = self.ego_vehicle.get_transform().get_forward_vector()
-        self.anomaly.add_impulse(self.base_wind*5)
-        torque = carla.Vector3D(random.uniform(-50, 50),
-                                random.uniform(-50, 50),
-                                random.uniform(-20, 20))
-
-        self.anomaly.add_torque(torque * 5)
-        self.anomaly.set_actor_semantic_tag("Medium_Anomaly")
         return self.anomaly
 
     def on_destroy(self):
@@ -880,33 +883,32 @@ class BlowingNewspaper_Anomaly(Anomaly):
         super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
 
     def handle_semantic_tag(self):
-        front_back = 1
-        if random.random() < 0.2:
-            front_back = -1
-        base_wind = self.base_wind * front_back
-        theta = random.uniform(-math.radians(90),math.radians(90))
-        dir_x = base_wind.x * math.cos(theta) + self.right.x * math.sin(theta)
-        dir_y = base_wind.y * math.cos(theta) + self.right.y * math.sin(theta)
-        vertical = random.uniform(-1.5,2.5)
+        if self.tick == 1:
+            self.base_wind = self.ego_vehicle.get_transform().get_forward_vector()
+            self.right = self.ego_vehicle.get_transform().get_right_vector()
+            init_force = carla.Vector3D(self.base_wind.x, self.base_wind.y, self.base_wind.z + 0.5).make_unit_vector()
+            self.anomaly.add_impulse(init_force)
+        else:
+            front_back = 1
+            if random.random() < 0.2:
+                front_back = -1
+            base_wind = self.base_wind * front_back
+            theta = random.uniform(-math.radians(90),math.radians(90))
+            dir_x = base_wind.x * math.cos(theta) + self.right.x * math.sin(theta)
+            dir_y = base_wind.y * math.cos(theta) + self.right.y * math.sin(theta)
+            vertical = random.uniform(-1.5,2.5)
 
-        force = carla.Vector3D(dir_x, dir_y, vertical)
+            force = carla.Vector3D(dir_x, dir_y, vertical)
 
-        torque = carla.Vector3D(random.uniform(-50, 50),
-                                random.uniform(-50, 50),
-                                random.uniform(-20, 20))
+            torque = carla.Vector3D(random.uniform(-50, 50),
+                                    random.uniform(-50, 50),
+                                    random.uniform(-20, 20))
 
-        self.anomaly.add_torque(torque*5)
-        self.anomaly.add_force(force*random.uniform(0,5))
+            self.anomaly.add_torque(torque*5)
+            self.anomaly.add_force(force*random.uniform(0,5))
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.start_tick = self.tick
-        self.world.tick()
-        self.base_wind = self.ego_vehicle.get_transform().get_forward_vector()
-        self.right = self.ego_vehicle.get_transform().get_right_vector()
-        init_force = carla.Vector3D(self.base_wind.x, self.base_wind.y, self.base_wind.z+0.5).make_unit_vector()
-        self.anomaly.add_impulse(init_force)
-        self.anomaly.set_actor_semantic_tag("Small_Anomaly")
         return self.anomaly
 
     def on_destroy(self):
@@ -1301,7 +1303,8 @@ class BillBoard_Anomaly(Anomaly):
 
     def spawn_anomaly(self):
         self.anomaly = super().spawn_anomaly()
-        self.anomaly.get_parent().set_simulate_physics(False)
+        if self.anomaly is not None:
+            self.anomaly.get_parent().set_simulate_physics(False)
         return self.anomaly
 
 

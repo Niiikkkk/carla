@@ -5,12 +5,13 @@ from anomalies import *
 import logging
 from logging import info,warning,error
 
-def main(args):
+def main(args, bench_run=None):
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S',
     )
     if args.log:
+        info("Run: %s", bench_run)
         info("Seed: %s", args.seed)
         info("Anomalies: %s", args.anomalies)
         info("Number of vehicles: %s", args.number_of_vehicles)
@@ -61,150 +62,165 @@ def main(args):
     # x is front/back, y is left/right, z is up/down
     spectator:carla.Actor = world.get_spectator()
 
-    for run in range(args.number_of_runs):
-        info(f"Starting run {run+1}/{args.number_of_runs}")
-        try:
+    try:
 
-            anomalies = []
-            all_vehicles = []
-            sensors = []
-            ego_vehicle = spawn_ego_vehicle(world, client, args)
-            if ego_vehicle is None:
-                raise Exception("Ego vehicle not spawned, exiting...")
+        anomalies = []
+        all_vehicles = []
+        sensors = []
+        ego_vehicle = spawn_ego_vehicle(world, client, args)
+        if ego_vehicle is None:
+            raise Exception("Ego vehicle not spawned, exiting...")
 
-            all_vehicles.append(ego_vehicle.id)
+        all_vehicles.append(ego_vehicle.id)
 
-            # vehicles is an array of all the ID of the vehicles spawned
-            vehicles = generate_traffic(args, world, client)
-            all_vehicles.extend(vehicles)
+        # vehicles is an array of all the ID of the vehicles spawned
+        vehicles = generate_traffic(args, world, client)
+        all_vehicles.extend(vehicles)
 
-            # The array is composed as follows: [controller, walker, controller, walker, ...]
-            contr_walk_array = generate_pedestrian(args, world, client)
-            # Spawn the anomalies
+        # The array is composed as follows: [controller, walker, controller, walker, ...]
+        contr_walk_array = generate_pedestrian(args, world, client)
+
+
+
+        wp:carla.Waypoint = world.get_map().get_waypoint(ego_vehicle.get_location(), project_to_road=True, lane_type=carla.LaneType.Driving)
+        #3.5 is the width of one lane, so 7 if double lane
+        lane_width = wp.lane_width
+        if wp.lane_change is not carla.LaneChange.NONE:
+            lane_width = lane_width * 2
+        # We use the lane_width in order to base the spawn of the anomalies. If lane is smaller, less anomalies
+        # are spawned, if lane is bigger, more anomalies are spawned
+        if lane_width == 3.5:
+            args.anomalies = random.sample(args.anomalies, min(random.randint(1,4),len(args.anomalies)))
+        else:
+            args.anomalies = random.sample(args.anomalies, min(random.randint(1,6),len(args.anomalies)))
+        info("Anomalies to spawn: " + str(args.anomalies))
+
+
+        # Spawn the anomalies
+        if args.anomalies:
+            for str_anomaly in args.anomalies:
+                anomaly_name = str_anomaly[0]
+                size = str_anomaly[1]
+                anomaly_object = generate_anomaly_object(world, client, ego_vehicle, anomaly_name, size)
+                info("Spawning anomaly: " + str_anomaly[0] + " of size " + str(size))
+                anomaly: carla.Actor = anomaly_object.spawn_anomaly()
+                if anomaly is None:
+                    warning(str_anomaly[0] + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
+                if anomaly is not None:
+                    info(f"Anomaly {anomaly_name} spawned")
+                    world.tick()
+                    anomalies.append(anomaly_object)
+            if len(anomalies) == 0:
+                raise Exception("No anomalies spawned, exiting...")
+
+        # Setup the collision sensor, only if some anomalies are present
+
+        if args.anomalies:
+            coll_sen: carla.Sensor = attach_collision_sensor(args, world, client, ego_vehicle)
+            coll_queue = deque(maxlen=1)
+            coll_sen.listen(lambda data: coll_queue.append(data))
+            sensors.append(Collision_Sensor(coll_queue, coll_sen))
+
+        #Wait 1.5 second (1.5/simulation_time_for_tick), to let everything spawn properly and adjust their rotation,
+        # then set the autopilot to true and the sensors
+        for _ in range(int(1.5/simulation_time_for_tick)):
+            world.tick()
+
+        # Set up the sensors
+        set_up_sensors(args, client, ego_vehicle, sensors, world)
+
+        #set autopilot for the vehicles and start the simulation
+        vehicles_in_world = world.get_actors().filter("*vehicle*")
+        anomaly_instances = [anomaly_obj.anomaly.id for anomaly_obj in anomalies]
+        for vehicle in vehicles_in_world:
+            #There's also the flipped car anomaly that spawn a vehicle, we don't what to set autopilot to it
+            if not vehicle.id in anomaly_instances:
+                vehicle.set_autopilot(True)
+
+
+
+
+        #With a for, it runs N times the simulation
+        # 0.05 is the simulation run for each tick.
+        loops = args.run_time / simulation_time_for_tick
+        total_frames = 0
+        for i in range(int(loops)):
+            world.tick()
+            total_frames += 1
             if args.anomalies:
-                for str_anomaly in args.anomalies:
-                    anomaly_name = str_anomaly[0]
-                    size = str_anomaly[1]
-                    anomaly_object = generate_anomaly_object(world, client, ego_vehicle, anomaly_name, size)
-                    info("Spawning anomaly: " + str_anomaly[0] + " of size " + str(size))
-                    anomaly: carla.Actor = anomaly_object.spawn_anomaly()
-                    if anomaly is None:
-                        warning(str_anomaly[0] + " -> Tried to spawn anomaly, but it was not spawned. Skipping it...")
-                    if anomaly is not None:
-                        info(f"Anomaly {anomaly_name} spawned")
-                        world.tick()
-                        anomalies.append(anomaly_object)
-                if len(anomalies) == 0:
-                    raise Exception("No anomalies spawned, exiting...")
+                for anomaly_obj in anomalies:
+                    anomaly_obj.tick += 1
 
-            # Setup the collision sensor, only if some anomalies are present
-
+            # If the ego vehicle pass the anomaly, break the loop. I compute this in this way:
+            # - Get the vector of the difference of the locations
+            # - Get the forward vector of the ego vehicle
+            # - Compute the dot product of the difference vector and the forward vector
+            # Also break the loop if the ego vehicle collides with the anomaly
             if args.anomalies:
-                coll_sen: carla.Sensor = attach_collision_sensor(args, world, client, ego_vehicle)
-                coll_queue = deque(maxlen=1)
-                coll_sen.listen(lambda data: coll_queue.append(data))
-                sensors.append(Collision_Sensor(coll_queue, coll_sen))
-
-            #Wait 1.5 second (1.5/simulation_time_for_tick), to let everything spawn properly and adjust their rotation,
-            # then set the autopilot to true and the sensors
-            for _ in range(int(1.5/simulation_time_for_tick)):
-                world.tick()
-
-            # Set up the sensors
-            set_up_sensors(args, client, ego_vehicle, sensors, world)
-
-            #set autopilot for the vehicles and start the simulation
-            vehicles_in_world = world.get_actors().filter("*vehicle*")
-            anomaly_instances = [anomaly_obj.anomaly.id for anomaly_obj in anomalies]
-            for vehicle in vehicles_in_world:
-                #There's also the flipped car anomaly that spawn a vehicle, we don't what to set autopilot to it
-                if not vehicle.id in anomaly_instances:
-                    vehicle.set_autopilot(True)
-
-
-
-
-            #With a for, it runs N times the simulation
-            # 0.05 is the simulation run for each tick.
-            loops = args.run_time / simulation_time_for_tick
-            total_frames = 0
-            for i in range(int(loops)):
-                world.tick()
-                total_frames += 1
-                if args.anomalies:
+                # Check if the ego vehicle collides with the anomaly
+                if len(coll_queue) != 0:
+                    flag = False
+                    coll_event:carla.CollisionEvent = coll_queue.pop()
                     for anomaly_obj in anomalies:
-                        anomaly_obj.tick += 1
-
-                # If the ego vehicle pass the anomaly, break the loop. I compute this in this way:
-                # - Get the vector of the difference of the locations
-                # - Get the forward vector of the ego vehicle
-                # - Compute the dot product of the difference vector and the forward vector
-                # Also break the loop if the ego vehicle collides with the anomaly
-                if args.anomalies:
-                    # Check if the ego vehicle collides with the anomaly
-                    if len(coll_queue) != 0:
-                        flag = False
-                        coll_event:carla.CollisionEvent = coll_queue.pop()
-                        for anomaly_obj in anomalies:
-                            # Check if the anomaly is the one collided with
-                            if coll_event.other_actor.id == anomaly_obj.anomaly.id:
+                        # Check if the anomaly is the one collided with
+                        if coll_event.other_actor.id == anomaly_obj.anomaly.id:
+                            info(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
+                            flag = True
+                            break
+                        # If the anomaly is just "attached" to the parent actor, check if the parent actor is the one collided with
+                        if anomaly_obj.anomaly.get_parent() is not None:
+                            if coll_event.other_actor.id == anomaly_obj.anomaly.get_parent().id:
                                 info(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
                                 flag = True
                                 break
-                            # If the anomaly is just "attached" to the parent actor, check if the parent actor is the one collided with
-                            if anomaly_obj.anomaly.get_parent() is not None:
-                                if coll_event.other_actor.id == anomaly_obj.anomaly.get_parent().id:
-                                    info(f"Ego vehicle collided with {anomaly_obj.anomaly}, stopping simulation...")
-                                    flag = True
-                                    break
-                        if flag:
-                            break
-
-                    # Stop if the ego vehicle pass the anomaly
-                    # In case of more anomalies, this will stop the simulation when the last anomaly is passed
-
-                    # Compute the furthest anomaly from the ego vehicle and stop if the ego vehicle passes it
-                    ego_location = ego_vehicle.get_transform().location
-                    more_distance_anomaly = anomalies[0].anomaly
-                    more_distance = 0
-                    first_iter = True
-                    for anomaly_obj in anomalies:
-                        # Get the distance vector between the ego vehicle and the anomaly
-                        difference = ego_location - anomaly_obj.anomaly.get_transform().location
-                        difference_vector = carla.Vector3D(difference.x, difference.y, difference.z)
-                        ego_fw = ego_vehicle.get_transform().get_forward_vector()
-                        ego_vector = carla.Vector3D(ego_fw.x, ego_fw.y, ego_fw.z)
-                        dot = difference_vector.dot(ego_vector)
-                        if first_iter:
-                            more_distance = dot
-                            first_iter = False
-                        else:
-                            if dot < more_distance:
-                                more_distance = dot
-                                more_distance_anomaly = anomaly_obj.anomaly
-                    # Compute the difference vector and the dot product
-                    if more_distance > 0:
-                        info(f"Ego vehicle passed the furthest anomaly {more_distance_anomaly}, stopping simulation...")
+                    if flag:
                         break
-                    for anomaly_obj in anomalies:
-                        anomaly_obj.handle_semantic_tag()
 
-                # Handle the sensors data
-                handle_sensor_data(args, run, sensors)
+                # Stop if the ego vehicle pass the anomaly
+                # In case of more anomalies, this will stop the simulation when the last anomaly is passed
 
-        except KeyboardInterrupt:
-            error("Simulation interrupted by user.", exc_info=True)
-        except Exception as e:
-            error(f"An error occurred: {e}", exc_info=True)
-            error("Simulation failed. Interrupting...", exc_info=True)
-        finally:
-            # Handle the anomalies
-            if args.anomalies:
+                # Compute the furthest anomaly from the ego vehicle and stop if the ego vehicle passes it
+                ego_location = ego_vehicle.get_transform().location
+                more_distance_anomaly = anomalies[0].anomaly
+                more_distance = 0
+                first_iter = True
                 for anomaly_obj in anomalies:
-                    anomaly_obj.on_destroy()
-            clean_up(args,world,client,tm,sensors)
-            info("Total frames: " + str(total_frames))
-            info("End of simulation")
+                    # Get the distance vector between the ego vehicle and the anomaly
+                    difference = ego_location - anomaly_obj.anomaly.get_transform().location
+                    difference_vector = carla.Vector3D(difference.x, difference.y, difference.z)
+                    ego_fw = ego_vehicle.get_transform().get_forward_vector()
+                    ego_vector = carla.Vector3D(ego_fw.x, ego_fw.y, ego_fw.z)
+                    dot = difference_vector.dot(ego_vector)
+                    if first_iter:
+                        more_distance = dot
+                        first_iter = False
+                    else:
+                        if dot < more_distance:
+                            more_distance = dot
+                            more_distance_anomaly = anomaly_obj.anomaly
+                # Compute the difference vector and the dot product
+                if more_distance > 0:
+                    info(f"Ego vehicle passed the furthest anomaly {more_distance_anomaly}, stopping simulation...")
+                    break
+                for anomaly_obj in anomalies:
+                    anomaly_obj.handle_semantic_tag()
+
+            # Handle the sensors data
+            handle_sensor_data(args, bench_run+1, sensors)
+
+    except KeyboardInterrupt:
+        error("Simulation interrupted by user.", exc_info=True)
+    except Exception as e:
+        error(f"An error occurred: {e}", exc_info=True)
+        error("Simulation failed. Interrupting...", exc_info=True)
+    finally:
+        # Handle the anomalies
+        if args.anomalies:
+            for anomaly_obj in anomalies:
+                anomaly_obj.on_destroy()
+        clean_up(args,world,client,tm,sensors)
+        info("Total frames: " + str(total_frames))
+        info("End of simulation")
 
 
 def handle_sensor_data(args, run, sensors):

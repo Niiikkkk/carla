@@ -104,7 +104,7 @@ def benchmark():
         "tablet", "winebottle", "suitcase", "carmirror", "umbrella",
         "speaker",
         #DYN
-        #"blowingnewspaper", "football_bounce"
+        "blowingnewspaper", "football_bounce", "basketball_bounce"
     ]
 
     list_medium_anomalies = [
@@ -115,15 +115,15 @@ def benchmark():
         "trafficcone", "roadsigntwisted", "roadsignvandalized", "trolley",
         "trunkcar", "washingmachine", "woodpalette", "wheelchair", "box",
         #DYN
-        #"labrador", "person", "bird", "drone", "trashcan", "garbagebagwind", "basketball_bounce"
+        "labrador", "person", "bird", "drone", "trashcan", "garbagebagwind",
     ]
 
     list_large_anomalies = [
         "fallenstreetlight", "fallentree", "flippedcar", "pilesand",
         "scooter", "shoppingcart", "table", "tierscooter",
         #DYN
-        #"dangerdriver", "crash", "streetlight", "tree", "trafficlight", "trafficlightoff",
-        #"billboard", "instantcarbreak", "carthroughredlight"
+        "dangerdriver", "crash", "streetlight", "tree", "trafficlight", "trafficlightoff",
+        "billboard", "instantcarbreak", "carthroughredlight"
     ]
 
     list_dynamic_anomalies = [
@@ -141,7 +141,7 @@ def benchmark():
     args.radar = True
     args.instance = True
     args.lidar_semantic = True
-    number_of_runs = 1
+    number_of_runs = 10
     seed = 42
     args.log = True
     # NOTE: fps and sensor_tick are linked. If I have 20 fps, then the tick will be every 1/20 = 0.05 seconds. So the sensor tick should be >= 0.05.
@@ -183,20 +183,20 @@ def benchmark():
         args.anomalies = tiny + small + medium + large
 
         #randomly select number of vehicles
-        #args.number_of_vehicles = random.randint(10, 40)
-        args.number_of_vehicles = 0
+        args.number_of_vehicles = random.randint(10, 40)
+        #args.number_of_vehicles = 0
 
         #randomly select number of pedestrians
-        #args.number_of_pedestrians = random.randint(10, 40)
-        args.number_of_pedestrians = 0
+        args.number_of_pedestrians = random.randint(10, 40)
+        #args.number_of_pedestrians = 0
 
-        #args.spawn_points = [carla.Transform(carla.Location(x=-48.81999023,y=-7.79507507,z=0.6), carla.Rotation(0,90,0))]
+        #args.spawn_points = [carla.Transform(carla.Location(x=-8.81999023,y=68,z=0.6), carla.Rotation(0,0,0))]
 
         print(f"Running run {run+1} / {number_of_runs} with the following parameters:")
         print(args)
 
         start_time = time.time()
-        main(args)
+        main(args,run)
         end_time = time.time()
         print(f"Execution Time: {end_time - start_time} seconds\n\n\n")
 
