@@ -287,19 +287,11 @@ def attach_lidar(args,world,client,ego_vehicle):
     lidar_bp.set_attribute("points_per_second", '500000')
     lidar_bp.set_attribute("sensor_tick", args.sensor_tick)
 
-    # dropoff_general_rate is the rate of points that are randomly dropped off. 0.0 means no points are dropped off.
-    # lidar_bp.set_attribute("dropoff_general_rate", '0.0')
-    # # dropoff_intensity_limity is a threshold above which no points are dropped off. 0.0 means that even points with low intensity are kept.
-    # lidar_bp.set_attribute("dropoff_intensity_limit", '0.0')
-    # # dropoff_zero_intensity is the prob of dropping off points with zero intensity. 0.0 means that even points with zero intensity are kept.
-    # lidar_bp.set_attribute("dropoff_zero_intensity", '0.0')
-
-
     # Camera has also another attribute called "sensor_tick" that is the time to capture frames. Since we are in sync mode with a fixed time = 0.05, each tick() of 0.05 will
     # caputre a frame. If sensore_tick is set to 0.1, the camera will capture a frame every 2 ticks.
     pos = carla.Transform()
     #For the Mustang, the lidar is located on the roof
-    pos.location.z = 1.4
+    pos.location.z = 1.9
     pos.location.x = -0.4
     sensor = world.spawn_actor(lidar_bp, pos, attach_to=ego_vehicle)
     return sensor
@@ -350,7 +342,7 @@ def attach_semantic_lidar(args, world,client,ego_vehicle):
     semantic_lidar_bp.set_attribute("points_per_second", '500000')
     semantic_lidar_bp.set_attribute("sensor_tick", args.sensor_tick)
     pos = carla.Transform()
-    pos.location.z = 1.4
+    pos.location.z = 1.9
     pos.location.x = -0.4
     sensor = world.spawn_actor(semantic_lidar_bp, pos, attach_to=ego_vehicle)
     return sensor
@@ -425,7 +417,9 @@ def save_lidar(lidar_measurements,anomaly_name,run):
     """
     VIRIDIS = np.array(cm.get_cmap('plasma').colors)
     VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
-    points = np.copy(np.frombuffer(lidar_measurements.raw_data, dtype=np.float32)).reshape(-1,4)
+
+    data = np.copy(np.frombuffer(lidar_measurements.raw_data, dtype=np.dtype('f4')))
+    points = np.reshape(data, (int(data.shape[0] / 4), 4))
     #point's shape is smnthing like (n,4)
 
     intensity = points[:,3]
@@ -437,7 +431,8 @@ def save_lidar(lidar_measurements,anomaly_name,run):
 
     # The points are in the form [x, y, z, intensity], we need to convert them to the form [x, y, z] and invert the y axis (this because o3d uses a right-handed coordinate system)
     tmp = points[:,:-1]
-    tmp[:,:1] = -tmp[:,:1]
+    #Invert y axis
+    tmp[:,1] = -tmp[:,1]
 
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(tmp)
