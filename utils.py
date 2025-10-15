@@ -307,8 +307,8 @@ def attach_radar(args, world,client,ego_vehicle):
     """
     # Get the blueprint library
     radar_bp = world.get_blueprint_library().find("sensor.other.radar")
-    radar_bp.set_attribute("horizontal_fov", '30')
-    radar_bp.set_attribute("vertical_fov", '30')
+    radar_bp.set_attribute("horizontal_fov", '35')
+    radar_bp.set_attribute("vertical_fov", '20')
     radar_bp.set_attribute("points_per_second", '10000')
     radar_bp.set_attribute("range", '50')
     radar_bp.set_attribute("sensor_tick", args.sensor_tick)
@@ -546,7 +546,7 @@ def save_radar(radar_measurements,anomaly_name,run):
 
     pcd = o3d.geometry.PointCloud()
     points = radar_points_list[:,:-1]
-    points[:,:1] = -points[:,:1]
+    points[:,1] = -points[:,1]
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.colors = o3d.utility.Vector3dVector(int_color)
     # crete the direcotry if it does not exist
