@@ -250,6 +250,26 @@ def attach_rbgcamera(args, world,client,ego_vehicle):
     rgb_bp.set_attribute("image_size_y", args.image_size_y)
     rgb_bp.set_attribute("fov", '90')
     rgb_bp.set_attribute("sensor_tick", args.sensor_tick)
+    #rgb_bp.set_attribute("exposure_mode", "histogram")
+    #rgb_bp.set_attribute("exposure_min_bright", "0.03")
+    #rgb_bp.set_attribute("exposure_max_bright", "8.0")
+    #rgb_bp.set_attribute("exposure_speed_up", "3.0")
+    #rgb_bp.set_attribute("exposure_speed_down", "1.0")
+    rgb_bp.set_attribute("fstop", "16.0")
+    rgb_bp.set_attribute("iso", "100000.0")
+    rgb_bp.set_attribute("gamma", "2.2")
+    rgb_bp.set_attribute("temp", "5500.0")
+    rgb_bp.set_attribute("toe", "0.55")
+    rgb_bp.set_attribute("slope", "0.88")
+    rgb_bp.set_attribute("tint", "0.0")
+    rgb_bp.set_attribute("lens_flare_intensity", "0.0")
+    rgb_bp.set_attribute("shutter_speed", "200.0")
+    rgb_bp.set_attribute("bloom_intensity", "0.675")
+    rgb_bp.set_attribute("focal_distance", "1000.0")
+    rgb_bp.set_attribute("exposure_compensation", "7.5")
+    rgb_bp.set_attribute("exposure_max_bright", "12.0")
+    rgb_bp.set_attribute("motion_blur_intensity", "0.0")
+    rgb_bp.set_attribute("chromatic_aberration_intensity", "0.0")
     # Camera has also another attribute called "sensor_tick" that is the time to capture frames. Since we are in sync mode with a fixed time = 0.05, each tick() of 0.05 will
     # caputre a frame. If sensore_tick is set to 0.1, the camera will capture a frame every 2 ticks.
     pos = carla.Transform()
@@ -438,12 +458,12 @@ def save_lidar(lidar_measurements,anomaly_name,run):
     pcd.points = o3d.utility.Vector3dVector(tmp)
     pcd.colors = o3d.utility.Vector3dVector(int_color)
     # crete the direcotry if it does not exist
-    if not os.path.exists("output/lidar/"+str(run)):
-        os.makedirs("output/lidar/"+str(run))
+    if not os.path.exists("output/"+str(run)+"/lidar/"):
+        os.makedirs("output/"+str(run)+"/lidar/")
     if anomaly_name is not None:
-        o3d.io.write_point_cloud(f"output/lidar/"+str(run)+"/"+anomaly_name+f"_lidar-{lidar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/"+str(run)+"/lidar/"+"/"+anomaly_name+f"_lidar-{lidar_measurements.frame}.ply", pcd)
     else:
-        o3d.io.write_point_cloud(f"output/lidar/"+str(run)+"/normal_" + f"_lidar-{lidar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/"+str(run)+"/lidar/"+"/normal_" + f"_lidar-{lidar_measurements.frame}.ply", pcd)
 
 def save_semantic_lidar(lidar_measurements,anomaly_name,run):
     """Save the Semantic LIDAR measurements.
@@ -511,12 +531,12 @@ def save_semantic_lidar(lidar_measurements,anomaly_name,run):
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.colors = o3d.utility.Vector3dVector(int_color)
     # crete the direcotry if it does not exist
-    if not os.path.exists("output/semantic_lidar/"+str(run)):
-        os.makedirs("output/semantic_lidar/"+str(run))
+    if not os.path.exists("output/"+str(run)+"/semantic_lidar/"):
+        os.makedirs("output/"+str(run)+"/semantic_lidar/")
     if anomaly_name is not None:
-        o3d.io.write_point_cloud(f"output/semantic_lidar/"+str(run)+"/"+anomaly_name+f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/"+str(run)+"/semantic_lidar/"+"/"+anomaly_name+f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
     else:
-        o3d.io.write_point_cloud(f"output/semantic_lidar/"+str(run)+"/normal_" + f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/"+str(run)+"/semantic_lidar/"+"/normal_" + f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
 
 def save_radar(radar_measurements,anomaly_name,run):
     """Save the radar measurements.
@@ -550,12 +570,12 @@ def save_radar(radar_measurements,anomaly_name,run):
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.colors = o3d.utility.Vector3dVector(int_color)
     # crete the direcotry if it does not exist
-    if not os.path.exists("output/radar/"+str(run)):
-        os.makedirs("output/radar/"+str(run))
+    if not os.path.exists("output/"+str(run)+"/radar/"):
+        os.makedirs("output/"+str(run)+"/radar/")
     if anomaly_name:
-        o3d.io.write_point_cloud(f"output/radar/"+str(run)+"/"+anomaly_name+str(run)+f"_radar-{radar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/"+str(run)+"/radar/"+"/"+anomaly_name+str(run)+f"_radar-{radar_measurements.frame}.ply", pcd)
     else:
-        o3d.io.write_point_cloud(f"output/radar/"+str(run)+"/normal_" + str(run) + f"_radar-{radar_measurements.frame}.ply", pcd)
+        o3d.io.write_point_cloud(f"output/"+str(run)+"/radar/"+"/normal_" + str(run) + f"_radar-{radar_measurements.frame}.ply", pcd)
 
 def view_lidar(lidar_name):
     """View the LIDAR measurements.
@@ -705,7 +725,6 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
             diff = min_z - ground_z
             # Adjust the z coordinate of the object
             transform.location.z = transform.location.z - diff + 0.15
-
 
     if anomaly_in_waypoint:
         wp = map.get_waypoint(transform.location, project_to_road=True, lane_type=carla.LaneType.Sidewalk)
