@@ -587,16 +587,16 @@ def benchmark():
 
     print("Total Anomalies: ", len(list_tiny_anomalies) + len(list_small_anomalies) + len(list_medium_anomalies) + len(list_large_anomalies))
 
-    args.semantic = True
-    args.rgb = True
-    args.depth = True
+    # args.semantic = True
+    # args.rgb = True
+    # args.depth = True
     args.lidar = True
     args.radar = True
-    args.instance = True
-    args.lidar_semantic = True
+    # args.instance = True
+    # args.lidar_semantic = True
 
-    number_of_runs = 50
-    seed = 40
+    number_of_runs = 1
+    seed = 43
     args.log = True
     # NOTE: fps and sensor_tick are linked. If I have 20 fps, then the tick will be every 1/20 = 0.05 seconds. So the sensor tick should be >= 0.05.
     # If the set sensor_tick 0.1 with an FPS of 20, the sensor will capture data every 2 frames.

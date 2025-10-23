@@ -461,10 +461,13 @@ def save_lidar(lidar_measurements,anomaly_name,run):
     # crete the direcotry if it does not exist
     if not os.path.exists("output/"+str(run)+"/lidar/"):
         os.makedirs("output/"+str(run)+"/lidar/")
+    if not os.path.exists("output/"+str(run)+"/lidar/raw/"):
+        os.makedirs("output/"+str(run)+"/lidar/raw/")
     if anomaly_name is not None:
         o3d.io.write_point_cloud(f"output/"+str(run)+"/lidar/"+"/"+anomaly_name+f"_lidar-{lidar_measurements.frame}.ply", pcd)
     else:
         o3d.io.write_point_cloud(f"output/"+str(run)+"/lidar/"+"/normal_" + f"_lidar-{lidar_measurements.frame}.ply", pcd)
+    np.save(f"output/"+str(run)+"/lidar/raw/"+"/"+f"lidar-{lidar_measurements.frame}.npy", np.frombuffer(lidar_measurements.raw_data))
 
 def save_semantic_lidar(lidar_measurements,anomaly_name,run):
     """Save the Semantic LIDAR measurements.
@@ -534,10 +537,13 @@ def save_semantic_lidar(lidar_measurements,anomaly_name,run):
     # crete the direcotry if it does not exist
     if not os.path.exists("output/"+str(run)+"/semantic_lidar/"):
         os.makedirs("output/"+str(run)+"/semantic_lidar/")
+    if not os.path.exists("output/"+str(run)+"/semantic_lidar/raw/"):
+        os.makedirs("output/"+str(run)+"/semantic_lidar/raw/")
     if anomaly_name is not None:
         o3d.io.write_point_cloud(f"output/"+str(run)+"/semantic_lidar/"+"/"+anomaly_name+f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
     else:
         o3d.io.write_point_cloud(f"output/"+str(run)+"/semantic_lidar/"+"/normal_" + f"_semantic_lidar-{lidar_measurements.frame}.ply", pcd)
+    np.save(f"output/"+str(run)+"/semantic_lidar/raw/"+"/"+f"semantic_lidar-{lidar_measurements.frame}.npy", np.frombuffer(lidar_measurements.raw_data))
 
 def save_radar(radar_measurements,anomaly_name,run):
     """Save the radar measurements.
@@ -572,10 +578,13 @@ def save_radar(radar_measurements,anomaly_name,run):
     # crete the direcotry if it does not exist
     if not os.path.exists("output/"+str(run)+"/radar/"):
         os.makedirs("output/"+str(run)+"/radar/")
+    if not os.path.exists("output/"+str(run)+"/radar/raw/"):
+        os.makedirs("output/"+str(run)+"/radar/raw/")
     if anomaly_name:
         o3d.io.write_point_cloud(f"output/"+str(run)+"/radar/"+"/"+anomaly_name+str(run)+f"_radar-{radar_measurements.frame}.ply", pcd)
     else:
         o3d.io.write_point_cloud(f"output/"+str(run)+"/radar/"+"/normal_" + str(run) + f"_radar-{radar_measurements.frame}.ply", pcd)
+    np.save(f"output/"+str(run)+"/radar/raw/"+"/"+f"radar-{radar_measurements.frame}.npy", np.frombuffer(radar_measurements.raw_data))
 
 def save_radar_old(radar_measurements,anomaly_name,run):
     """Save the radar measurements.
