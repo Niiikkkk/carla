@@ -1,4 +1,3 @@
-import collections
 import random
 
 import open3d as o3d
@@ -7,7 +6,6 @@ import carla
 import os
 import math
 from matplotlib import cm
-from open3d.examples.geometry.triangle_mesh_transformation import transform
 
 
 def set_sync_mode(world,client,simulation_time_for_tick):
@@ -147,7 +145,7 @@ def generate_traffic(args,world,client):
     batch = []
     for i in range(number_of_vehicles):
         vehicle_bp = random.choice(bp_vehicles)
-        while vehicle_bp.id == "vehicle.nissan.patrol":
+        while vehicle_bp.id == "vehicle.nissan.patrol" or vehicle_bp.id == "vehicle.ambulance.ford":
             # Nissan Patrol we skip it
             vehicle_bp = random.choice(bp_vehicles)
         vehicle_bp.set_attribute('role_name', 'autopilot')
@@ -245,31 +243,34 @@ def attach_rbgcamera(args, world,client,ego_vehicle):
         sensor (carla.Sensor): The camera sensor object.
     """
     # Get the blueprint library
-    rgb_bp = world.get_blueprint_library().find("sensor.camera.rgb")
+    rgb_bp: carla.ActorBlueprint = world.get_blueprint_library().find("sensor.camera.rgb")
     rgb_bp.set_attribute("image_size_x", args.image_size_x)
     rgb_bp.set_attribute("image_size_y", args.image_size_y)
     rgb_bp.set_attribute("fov", '90')
     rgb_bp.set_attribute("sensor_tick", args.sensor_tick)
-    #rgb_bp.set_attribute("exposure_mode", "histogram")
-    #rgb_bp.set_attribute("exposure_min_bright", "0.03")
-    #rgb_bp.set_attribute("exposure_max_bright", "8.0")
-    #rgb_bp.set_attribute("exposure_speed_up", "3.0")
-    #rgb_bp.set_attribute("exposure_speed_down", "1.0")
-    rgb_bp.set_attribute("fstop", "16.0")
-    rgb_bp.set_attribute("iso", "100000.0")
-    rgb_bp.set_attribute("gamma", "2.2")
-    rgb_bp.set_attribute("temp", "5500.0")
+
+
+
+    rgb_bp.set_attribute("fstop", "9.8000001907348633")
+    rgb_bp.set_attribute("min_fstop", "1.2")
+    rgb_bp.set_attribute("iso", "300000")
+    rgb_bp.set_attribute("gamma", "1.2")
+    rgb_bp.set_attribute("temp", "7700.0")
     rgb_bp.set_attribute("toe", "0.55")
     rgb_bp.set_attribute("slope", "0.88")
-    rgb_bp.set_attribute("tint", "0.0")
-    rgb_bp.set_attribute("lens_flare_intensity", "0.0")
-    rgb_bp.set_attribute("shutter_speed", "200.0")
-    rgb_bp.set_attribute("bloom_intensity", "0.675")
-    rgb_bp.set_attribute("focal_distance", "1000.0")
-    rgb_bp.set_attribute("exposure_compensation", "7.5")
-    rgb_bp.set_attribute("exposure_max_bright", "12.0")
-    rgb_bp.set_attribute("motion_blur_intensity", "0.0")
-    rgb_bp.set_attribute("chromatic_aberration_intensity", "0.0")
+    rgb_bp.set_attribute("tint", "-0.15")
+    #rgb_bp.set_attribute("lens_flare_intensity", "1")
+    rgb_bp.set_attribute("shutter_speed", "15.0")
+    #rgb_bp.set_attribute("bloom_intensity", "0.675")
+    rgb_bp.set_attribute("focal_distance", "250")
+    rgb_bp.set_attribute("exposure_compensation", "0")
+    rgb_bp.set_attribute("exposure_min_bright", "-10")
+    rgb_bp.set_attribute("exposure_max_bright", "20")
+    rgb_bp.set_attribute("exposure_speed_up", "3")
+    rgb_bp.set_attribute("exposure_speed_down", "1")
+    rgb_bp.set_attribute("vignette_intensity", "0.7")
+    #rgb_bp.set_attribute("motion_blur_intensity", "0.5")
+    #rgb_bp.set_attribute("chromatic_aberration_intensity", "0.0")
     # Camera has also another attribute called "sensor_tick" that is the time to capture frames. Since we are in sync mode with a fixed time = 0.05, each tick() of 0.05 will
     # caputre a frame. If sensore_tick is set to 0.1, the camera will capture a frame every 2 ticks.
     pos = carla.Transform()
@@ -714,8 +715,11 @@ def spawn_anomaly(world,client,ego_vehicle,prop,is_dynamic,is_character,can_be_r
             points = world.cast_ray(transform.location, transform.location - carla.Location(z=15))
             #filter the point, keeping only the ones that are in valid_labels
             points = [point for point in points if point.label in valid_labels]
-            street = points[-1]
-            ground_z = street.location.z
+            if len(points) != 0:
+                street = points[-1]
+                ground_z = street.location.z
+            else:
+                ground_z = 0
             if ground_z < 0:
                 ground_z = 0
             # Get the verteces of the bounding box and get the lowest z coordinate

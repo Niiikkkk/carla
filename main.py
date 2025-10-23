@@ -1,4 +1,5 @@
 import argparse
+from queue import Queue, Empty
 
 from sensors import *
 from anomalies import *
@@ -13,7 +14,7 @@ def main(args, bench_run=None):
     if args.log:
         info("Run: %s", bench_run)
         info("Seed: %s", args.seed)
-        info("Anomalies: %s", args.anomalies)
+        #info("Anomalies: %s", args.anomalies)
         info("Number of vehicles: %s", args.number_of_vehicles)
         info("Number of pedestrians: %s", args.number_of_pedestrians)
         info("Semantic sensor: %s", args.semantic)
@@ -33,7 +34,7 @@ def main(args, bench_run=None):
 
     if args.map is not None:
         world = load_map(world, client, args.map)
-    random.seed(args.seed)
+
     tm.set_random_device_seed(args.seed)
 
     # In hybrid mode, the physics engine is used only for the vehicles that are in a radious of 50 meters, this is
@@ -62,6 +63,7 @@ def main(args, bench_run=None):
     # x is front/back, y is left/right, z is up/down
     spectator:carla.Actor = world.get_spectator()
 
+    total_frames = 0
     try:
 
         anomalies = []
@@ -126,8 +128,6 @@ def main(args, bench_run=None):
         for _ in range(int(1.5/simulation_time_for_tick)):
             world.tick()
 
-        # Set up the sensors
-        set_up_sensors(args, client, ego_vehicle, sensors, world)
 
         #set autopilot for the vehicles and start the simulation
         vehicles_in_world = world.get_actors().filter("*vehicle*")
@@ -137,13 +137,13 @@ def main(args, bench_run=None):
             if not vehicle.id in anomaly_instances:
                 vehicle.set_autopilot(True)
 
-
+        # Set up the sensors
+        set_up_sensors(args, client, ego_vehicle, sensors, world)
 
 
         #With a for, it runs N times the simulation
         # 0.05 is the simulation run for each tick.
         loops = args.run_time / simulation_time_for_tick
-        total_frames = 0
         for i in range(int(loops)):
             world.tick()
             total_frames += 1
@@ -206,7 +206,8 @@ def main(args, bench_run=None):
                     anomaly_obj.handle_semantic_tag()
 
             # Handle the sensors data
-            handle_sensor_data(args, bench_run+1, sensors)
+            handle_sensor_data(args, args.seed, sensors)
+            info("Frame: " + str(world.get_snapshot().frame))
 
     except KeyboardInterrupt:
         error("Simulation interrupted by user.", exc_info=True)
@@ -222,55 +223,57 @@ def main(args, bench_run=None):
         info("Total frames: " + str(total_frames))
         info("End of simulation")
 
-
 def handle_sensor_data(args, run, sensors):
     # if the queue is empty, skip one and go to the next tick(). This happens at the first tick() because
     # the data will be available only at the next tick()
     for sensor in sensors:
-        sensor.handle(run,args.anomalies)
+        try:
+            sensor.handle(run,args.anomalies)
+        except Empty as e:
+            print("Some sensor queue is empty, skipping this tick")
 
 def set_up_sensors(args, client, ego_vehicle, sensors, world):
     if args.rgb:
         info("Setting up RGB camera")
         rgb_sen: carla.Sensor = attach_rbgcamera(args, world, client, ego_vehicle)
-        rgb_queue = deque(maxlen=1)
-        rgb_sen.listen(lambda data: rgb_queue.append(data))
+        rgb_queue = Queue()
+        rgb_sen.listen(lambda data: rgb_queue.put(data))
         sensors.append(RGB_Sensor(rgb_queue,rgb_sen))
     if args.lidar:
         info("Setting up LIDAR sensor")
         lidar_sen: carla.Sensor = attach_lidar(args, world, client, ego_vehicle)
-        lidar_queue = deque(maxlen=1)
-        lidar_sen.listen(lambda data: lidar_queue.append(data))
+        lidar_queue = Queue()
+        lidar_sen.listen(lambda data: lidar_queue.put(data))
         sensors.append(Lidar_Sensor(lidar_queue,lidar_sen))
     if args.semantic:
         info("Setting up Semantic Segmentation camera")
         semantic_sen: carla.Sensor = attach_semantic_camera(args, world, client, ego_vehicle)
-        semantic_queue = deque(maxlen=1)
-        semantic_sen.listen(lambda data: semantic_queue.append(data))
+        semantic_queue = Queue()
+        semantic_sen.listen(lambda data: semantic_queue.put(data))
         sensors.append(Semantic_Sensor(semantic_queue,semantic_sen))
     if args.lidar_semantic:
         info("Setting up Semantic LIDAR sensor")
         lidar_semantic: carla.Sensor = attach_semantic_lidar(args, world, client, ego_vehicle)
-        lidar_semantic_queue = deque(maxlen=1)
-        lidar_semantic.listen(lambda data: lidar_semantic_queue.append(data))
+        lidar_semantic_queue = Queue()
+        lidar_semantic.listen(lambda data: lidar_semantic_queue.put(data))
         sensors.append(Semantic_Lidar_Sensor(lidar_semantic_queue,lidar_semantic))
     if args.radar:
         info("Setting up Radar sensor")
         radar_sen: carla.Sensor = attach_radar(args, world, client, ego_vehicle)
-        radar_queue = deque(maxlen=1)
-        radar_sen.listen(lambda data: radar_queue.append(data))
+        radar_queue = Queue()
+        radar_sen.listen(lambda data: radar_queue.put(data))
         sensors.append(Radar_Sensor(radar_queue,radar_sen))
     if args.depth:
         info("Setting up Depth camera")
         depth_sen: carla.Sensor = attach_depth_camera(args, world, client, ego_vehicle)
-        depth_queue = deque(maxlen=1)
-        depth_sen.listen(lambda data: depth_queue.append(data))
+        depth_queue = Queue()
+        depth_sen.listen(lambda data: depth_queue.put(data))
         sensors.append(Depth_Sensor(depth_queue,depth_sen))
     if args.instance:
         info("Setting up Instance Segmentation camera")
         instance_sen: carla.Sensor = attach_instance_camera(args, world, client, ego_vehicle)
-        instance_queue = deque(maxlen=1)
-        instance_sen.listen(lambda data: instance_queue.append(data))
+        instance_queue = Queue()
+        instance_sen.listen(lambda data: instance_queue.put(data))
         sensors.append(Instant_Segmentation_Sensor(instance_queue,instance_sen))
 
 def generate_anomaly_object(world, client, ego_vehicle, name, size):
@@ -485,6 +488,171 @@ def generate_anomaly_object(world, client, ego_vehicle, name, size):
     warning("Anomaly " + name + " not found, returning None")
     return None
 
+def build_arg_anomalies(list,size):
+    anomalies = []
+    for name in list:
+        anomalies.append([name,size])
+    return anomalies
+
+def benchmark():
+    parser = argparse.ArgumentParser(description='CARLA Simulator')
+    parser.add_argument("--seed", type=int, help="Random seed", default=42)
+    parser.add_argument("--map", type=str, help="Map name to load", default=None)
+    parser.add_argument("--number_of_vehicles", type=int, help="Number of vehicles to spawn", default=10)
+    parser.add_argument("--number_of_pedestrians", type=int, help="Number of pedestrians to spawn", default=10)
+    parser.add_argument("--filterv", type=str, help="Vehicle filter", default="vehicle.*")
+    parser.add_argument("--filterw", type=str, help="Pedestrian filter", default="walker.*")
+    parser.add_argument("--hybrid", action='store_true', help="Use hybrid physics mode")
+    parser.add_argument("--image_size_x", type=str, help="Image size X", default='800')
+    parser.add_argument("--image_size_y", type=str, help="Image size Y", default='600')
+    parser.add_argument('--sensor_tick', type=str, default='0.1',
+                        help='Sensor tick time in seconds (This is the FPS of the sensors)')
+    parser.add_argument("--fps", type=int, help="FPS the simulation should run at", default=20)
+    parser.add_argument("--rgb", action='store_true', help="Use RGB camera")
+    parser.add_argument("--lidar", action='store_true', help="Use lidar sensor")
+    parser.add_argument("--radar", action='store_true', help="Use radar sensor")
+    parser.add_argument("--depth", action='store_true', help="Use depth sensor")
+    parser.add_argument("--lidar_semantic", action='store_true', help="Use semantic lidar sensor")
+    parser.add_argument("--semantic", action='store_true', help="Use semantic camera")
+    parser.add_argument("--instance", action='store_true', help="Use instance segmentation")
+    parser.add_argument("--cloudiness", type=float, help="Use cloudiness", default=0.0)
+    parser.add_argument("--precipitation", type=float, help="Use precipitation", default=0.0)
+    parser.add_argument("--wind_intensity", type=float, help="Use wind intensity", default=0.0)
+    parser.add_argument("--sun_altitude_angle", type=float, help="Use sun altitude angle (Day/Night)", default=0.0)
+    parser.add_argument("--fog_density", type=float, help="Use fog density", default=0.0)
+    parser.add_argument("--fog_distance", type=float, help="Use fog distance", default=0.0)
+    parser.add_argument("--number_of_runs", type=int, help="Number of runs", default=1)
+    parser.add_argument("--run_time", type=int, help="Run time in seconds", default=10)
+    parser.add_argument("--anomalies", nargs="+", type=str, help="List of anomalies to spawn", default=None)
+    parser.add_argument("--spawn_points", nargs="+", type=carla.Transform, help="List of spawn_points for ego vehicle", default=None)
+    args = parser.parse_args()
+
+    list_static_anomalies = [
+        "baseballbat", "basketball", "beerbottle", "football", "ladder", "mattress", "skateboard", "tire", "woodpalette",
+        "roadsigntwisted", "roadsignvandalized",
+        "garbagebag", "brokenchair", "hubcap",
+        "newspaper", "box", "plasticbottle", "winebottle", "metalbottle", "table", "officechair", "oldstove", "shoppingcart",
+        "bag", "helmet", "hat", "trafficcone", "fallenstreetlight", "book", "stroller", "fuelcan", "constructionbarrier",
+
+        # TO TEST sem seg
+        "suitcase", "carmirror", "umbrella", "tierscooter", "brick", "cardoor", "rock", "hoodcar", "trunkcar", "kidtoy", "mannequin", "tablet",
+        "laptop", "smartphone", "television", "scooter",
+        "washingmachine", "fridge", "pilesand", "shovel", "rake", "deliverybox", "fallentree", "oven",
+        "wheelchair", "hammer", "wrench", "shoe", "glove",
+        "drill", "saw", "sunglasses", "bikes", "flippedcar",
+        "wallet", "coffecup", "fence", "pizzabox", "toycar", "remotecontrol", "cd", "powerbank", "deodorant", "lighter",
+        "bowl", "bucket", "speaker", "guitar", "pillow", "fan", "trolley", "dumbell"
+    ]
+
+    list_tiny_anomalies = [
+        "beerbottle", "cd", "coffecup", "deodorant", "dumbell", "lighter", "plasticbottle",
+        "powerbank", "remotecontrol", "saw", "smartphone", "wallet", "wrench", "hammer", "sunglasses"
+    ]
+
+    list_small_anomalies = [
+        "baseballbat", "book", "metalbottle", "bowl", "brick", "bucket", "deliverybox",
+        "drill", "fan", "football", "fuelcan", "glove", "guitar", "hubcap", "kidtoy",
+        "laptop", "newspaper", "pizzabox", "rock", "shoe", "shovel",
+        "tablet", "winebottle", "suitcase", "carmirror", "umbrella",
+        "speaker",
+        #DYN
+        "blowingnewspaper", "football_bounce", "basketball_bounce"
+    ]
+
+    list_medium_anomalies = [
+        "bag", "basketball", "bikes", "brokenchair", "cardoor", "constructionbarrier",
+        "fence", "fridge", "garbagebag", "hat", "helmet", "hoodcar", "ladder",
+        "mannequin", "mattress", "officechair", "oldstove", "oven", "pillow",
+        "rake", "skateboard", "stroller", "television", "tire", "toycar",
+        "trafficcone", "roadsigntwisted", "roadsignvandalized", "trolley",
+        "trunkcar", "washingmachine", "woodpalette", "wheelchair", "box",
+        #DYN
+        "labrador", "person", "bird", "trashcan", "garbagebagwind"
+        #"drone"
+    ]
+
+    list_large_anomalies = [
+        "fallenstreetlight", "fallentree", "flippedcar", "pilesand",
+        "scooter", "shoppingcart", "table", "tierscooter",
+        #DYN
+        "dangerdriver", "crash", "streetlight", "tree", "trafficlight", "trafficlightoff",
+        "billboard", "instantcarbreak", "carthroughredlight"
+    ]
+
+    list_dynamic_anomalies = [
+        "labrador", "person", "bird", "dangerdriver", "crash", "drone", "instantcarbreak", "carthroughred",
+        "tree", "bouncingbasketball", "bouncingfootball", "streetlight", "trashcan", "trafficlight", "trafficlightoff",
+        "garbagebagwind", "newspaperwind", "billboard"
+    ]
+
+    print("Total Anomalies: ", len(list_tiny_anomalies) + len(list_small_anomalies) + len(list_medium_anomalies) + len(list_large_anomalies))
+
+    args.semantic = True
+    args.rgb = True
+    args.depth = True
+    args.lidar = True
+    args.radar = True
+    args.instance = True
+    args.lidar_semantic = True
+
+    number_of_runs = 1
+    seed = 40
+    args.log = True
+    # NOTE: fps and sensor_tick are linked. If I have 20 fps, then the tick will be every 1/20 = 0.05 seconds. So the sensor tick should be >= 0.05.
+    # If the set sensor_tick 0.1 with an FPS of 20, the sensor will capture data every 2 frames.
+    args.fps = 20
+    args.sensor_tick = '0.05'
+    args.hybrid = True
+
+
+    runs = {
+        0 : {"fps": 20, "sensor_tick": '0.1'},
+        # 1 : {"fps": 20, "sensor_tick": '0.05'},
+        # 2 : {"fps": 30, "sensor_tick": '0.035'},
+        # 3 : {"fps": 40, "sensor_tick": '0.025'},
+        # 4:  {"fps": 50, "sensor_tick": '0.02'},
+        # 5:  {"fps": 60, "sensor_tick": '0.017'},
+    }
+
+    for run in range(number_of_runs):
+        random.seed(seed+run)
+        args.seed = seed+run
+
+        number_of_tiny_anomalies = random.randint(1, 3)
+        tiny_anomalies = random.sample(list_tiny_anomalies, number_of_tiny_anomalies)
+        tiny = build_arg_anomalies(tiny_anomalies,"tiny")
+
+        number_of_small_anomalies = random.randint(1, 3)
+        small_anomalies = random.sample(list_small_anomalies, number_of_small_anomalies)
+        small = build_arg_anomalies(small_anomalies,"small")
+
+        number_of_medium_anomalies = random.randint(0, 2)
+        medium_anomalies = random.sample(list_medium_anomalies, number_of_medium_anomalies)
+        medium = build_arg_anomalies(medium_anomalies,"medium")
+
+        number_of_large_anomalies = random.randint(0, 2)
+        large_anomalies = random.sample(list_large_anomalies, number_of_large_anomalies)
+        large = build_arg_anomalies(large_anomalies,"large")
+
+
+        args.anomalies = tiny + small + medium + large
+
+        #randomly select number of vehicles
+        args.number_of_vehicles = random.randint(10, 40)
+        #args.number_of_vehicles = 0
+
+        #randomly select number of pedestrians
+        args.number_of_pedestrians = random.randint(10, 40)
+        #args.number_of_pedestrians = 0
+        #args.spawn_points = [carla.Transform(carla.Location(x=-20,y=135.89886719,z=0.6), carla.Rotation(0,0,0))]
+
+        print(f"Running run {run+1} / {number_of_runs} with the following parameters:")
+        print(args)
+
+        start_time = time.time()
+        main(args,run)
+        end_time = time.time()
+        print(f"Execution Time: {end_time - start_time} seconds\n\n\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='CARLA Simulator')
@@ -518,6 +686,8 @@ if __name__ == "__main__":
     parser.add_argument("--spawn_points", nargs="+", type=str, help="List of spawn_points for ego vehicle", default=None)
     parser.add_argument("--log", action='store_true', help="Log to file", default=False)
 
-    args = parser.parse_args()
+    #args = parser.parse_args()
 
-    main(args)
+    #main(args)
+
+    benchmark()

@@ -314,7 +314,7 @@ class Basketball_Bounce_Anomaly(Anomaly):
 
 class Football_Bounce_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
-        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False)
+        super().__init__(world, client, name, ego_vehicle, size, False, False, False, False, skip_check=True)
 
     def handle_semantic_tag(self):
         if self.tick == 1:
@@ -332,7 +332,7 @@ class Football_Bounce_Anomaly(Anomaly):
 
 class StreetLight_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
-        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True)
+        super().__init__(world, client, name, ego_vehicle, size, True, False, False, True, spawn_at_zero=True)
 
     def handle_semantic_tag(self):
         if self.tick == 1:
@@ -390,7 +390,13 @@ class FlippedCar_Anomaly(Anomaly):
         pass
 
     def spawn_anomaly(self):
-        vehicle = random.choice(self.world.get_blueprint_library().filter("vehicle.*"))
+        while True:
+            vehicle:carla.ActorBlueprint = random.choice(self.world.get_blueprint_library().filter("vehicle.*"))
+            if ((vehicle.id != "vehicle.nissan.patrol" and vehicle.id != "vehicle.carlacola" and
+                    vehicle.id != "vehicle.fuso.mitsubishi") and vehicle.id != "vehicle.firetruck.actors"
+                    and vehicle.id != "vehicle.sprinter.mercedes"):
+                break
+
         self.name = vehicle.id
         anomaly = super().spawn_anomaly()
         #make it tick, otherwise the location is 0,0,0 (after the tick is updated). If we don't tick, the car will not be spawned correctly
@@ -453,7 +459,6 @@ class InstantCarBreak_Anomaly(Anomaly):
             filter(lambda v: v.get_transform().get_forward_vector().dot(
                 self.ego_vehicle.get_transform().get_forward_vector()) > 0.9,
                    vehicles))
-        print(filtered_vehicles)
         filtered_vehicles.sort(key=lambda v: v.get_location().distance(self.ego_vehicle.get_location()))
         vehicle_to_attach = filtered_vehicles[0]
         print("InstantCarBreak -> Found vehicle to attach the anomaly to:", vehicle_to_attach)
@@ -1167,7 +1172,7 @@ class Crash_Anomaly(Anomaly):
 
 class Bird_Anomaly(Anomaly):
     def __init__(self, world: carla.World, client: carla.Client,name: str, ego_vehicle, size):
-        super().__init__(world, client, name, ego_vehicle, size, False, True, False, False)
+        super().__init__(world, client, name, ego_vehicle, size, False, True, False, False, spawn_on_right=True)
 
     def handle_semantic_tag(self):
         pass

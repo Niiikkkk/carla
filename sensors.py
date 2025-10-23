@@ -61,12 +61,12 @@ class RGB_Sensor(Sensor):
         """
         # Process the RGB data here
         anomaly_name = self.get_anomaly_name_from_list(anomaly)
-        if len(self.queue) != 0:
-            cam_data: carla.Image = self.queue.pop()
-            if anomaly_name:
-                cam_data.save_to_disk('output/rgb/'+ str(run) + "/" + anomaly_name  + '_%06d' % cam_data.frame)
-            else:
-                cam_data.save_to_disk('output/rgb/'+ str(run) + '/normal_' + '_%06d' % cam_data.frame)
+        # if len(self.queue) != 0:
+        cam_data: carla.Image = self.queue.get(True,1)
+        if anomaly_name:
+            cam_data.save_to_disk('output/' + str(run) + '/rgb' +  "/" + anomaly_name  + '_%06d' % cam_data.frame)
+        else:
+            cam_data.save_to_disk('output/' + str(run) + '/rgb' +  '/normal_' + '_%06d' % cam_data.frame)
 
 class Lidar_Sensor(Sensor):
     """
@@ -89,9 +89,9 @@ class Lidar_Sensor(Sensor):
         """
         # Process the LiDAR data here
         anomaly_name = self.get_anomaly_name_from_list(anomaly)
-        if len(self.queue) != 0:
-            lidar_data: carla.LidarMeasurement = self.queue.pop()
-            save_lidar(lidar_data, anomaly_name, run)
+#        if len(self.queue) != 0:
+        lidar_data: carla.LidarMeasurement = self.queue.get(True,1)
+        save_lidar(lidar_data, anomaly_name, run)
 
 class Semantic_Sensor(Sensor):
     """
@@ -114,19 +114,19 @@ class Semantic_Sensor(Sensor):
         """
         # Process the semantic data here
         anomaly_name = self.get_anomaly_name_from_list(anomaly)
-        if len(self.queue) != 0:
-            semantic_data: carla.Image = self.queue.pop()
-            if anomaly_name:
-                semantic_data.save_to_disk(
-                    'output/semantic/original/' + str(run) + "/" + anomaly_name +  '_%06d' % semantic_data.frame)
-                semantic_data.save_to_disk(
-                    f'output/semantic/converted/' + str(run) + "/" + anomaly_name + f'_{semantic_data.frame}',
-                    carla.ColorConverter.CityScapesPalette)
-            else:
-                semantic_data.save_to_disk(
-                    'output/semantic/original/' + str(run) + '/normal_'  + '_%06d' % semantic_data.frame)
-                semantic_data.save_to_disk(f'output/semantic/converted/' + str(run) + '/normal_'  + f'_{semantic_data.frame}',
-                                           carla.ColorConverter.CityScapesPalette)
+        # if len(self.queue) != 0:
+        semantic_data: carla.Image = self.queue.get(True,1)
+        if anomaly_name:
+            semantic_data.save_to_disk(
+                'output/' + str(run) +'/semantic/original' + "/" + anomaly_name +  '_%06d' % semantic_data.frame)
+            semantic_data.save_to_disk(
+                f'output/' + str(run) +'/semantic/converted' + "/" + anomaly_name + f'_{semantic_data.frame}',
+                carla.ColorConverter.CityScapesPalette)
+        else:
+            semantic_data.save_to_disk(
+                'output/' + str(run) +'/semantic/original'  + '/normal_'  + '_%06d' % semantic_data.frame)
+            semantic_data.save_to_disk(f'output/' + str(run) +'/semantic/converted' + '/normal_'  + f'_{semantic_data.frame}',
+                                       carla.ColorConverter.CityScapesPalette)
 
 class Semantic_Lidar_Sensor(Sensor):
     """
@@ -149,9 +149,9 @@ class Semantic_Lidar_Sensor(Sensor):
         """
         # Process the semantic LiDAR data here
         anomaly_name = self.get_anomaly_name_from_list(anomaly)
-        if len(self.queue) != 0:
-            lidar_semantic_data: carla.SemanticLidarMeasurement = self.queue.pop()
-            save_semantic_lidar(lidar_semantic_data, anomaly_name, run)
+        # if len(self.queue) != 0:
+        lidar_semantic_data: carla.SemanticLidarMeasurement = self.queue.get(True,1)
+        save_semantic_lidar(lidar_semantic_data, anomaly_name, run)
 
 class Radar_Sensor(Sensor):
     """
@@ -174,9 +174,9 @@ class Radar_Sensor(Sensor):
         """
         # Process the radar data here
         anomaly_name = self.get_anomaly_name_from_list(anomaly)
-        if len(self.queue) != 0:
-            radar_data: carla.RadarMeasurement = self.queue.pop()
-            save_radar(radar_data, anomaly_name, run)
+        # if len(self.queue) != 0:
+        radar_data: carla.RadarMeasurement = self.queue.get(True,1)
+        save_radar(radar_data, anomaly_name, run)
 
 class Depth_Sensor(Sensor):
     """
@@ -199,23 +199,23 @@ class Depth_Sensor(Sensor):
         """
         # Process the depth data here
         anomaly_name = self.get_anomaly_name_from_list(anomaly)
-        if len(self.queue) != 0:
-            depth_data: carla.Image = self.queue.pop()
-            if anomaly_name:
-                depth_data.save_to_disk(
-                    'output/depth/original/' + str(run) + "/" + anomaly_name  + '_%06d' % depth_data.frame)
-                depth_data.save_to_disk(
-                    'output/depth/depth/' + str(run) + "/" + anomaly_name  + '_%06d' % depth_data.frame,
-                    carla.ColorConverter.Depth)
-                depth_data.save_to_disk(
-                    'output/depth/logaritmic/' + str(run) + "/" + anomaly_name  + '_%06d' % depth_data.frame,
-                    carla.ColorConverter.LogarithmicDepth)
-            else:
-                depth_data.save_to_disk('output/depth/original/' + str(run) + '/normal_' + '_%06d' % depth_data.frame)
-                depth_data.save_to_disk('output/depth/depth/' + str(run) + '/normal_' + '_%06d' % depth_data.frame,
-                                        carla.ColorConverter.Depth)
-                depth_data.save_to_disk('output/depth/logaritmic/' + str(run) + '/normal_'  + '_%06d' % depth_data.frame,
-                                        carla.ColorConverter.LogarithmicDepth)
+        # if len(self.queue) != 0:
+        depth_data: carla.Image = self.queue.get(True,1)
+        if anomaly_name:
+            depth_data.save_to_disk(
+                'output/' + str(run) +'/depth/original'  + "/" + anomaly_name  + '_%06d' % depth_data.frame)
+            depth_data.save_to_disk(
+                'output/' + str(run) +'/depth/depth'  + "/" + anomaly_name  + '_%06d' % depth_data.frame,
+                carla.ColorConverter.Depth)
+            depth_data.save_to_disk(
+                'output/' + str(run) +'/depth/logaritmic'  + "/" + anomaly_name  + '_%06d' % depth_data.frame,
+                carla.ColorConverter.LogarithmicDepth)
+        else:
+            depth_data.save_to_disk('output/' + str(run) +'/depth/original'  + '/normal_' + '_%06d' % depth_data.frame)
+            depth_data.save_to_disk('output/' + str(run) +'/depth/depth'  + '/normal_' + '_%06d' % depth_data.frame,
+                                    carla.ColorConverter.Depth)
+            depth_data.save_to_disk('output/' + str(run) +'/depth/logaritmic'  + '/normal_'  + '_%06d' % depth_data.frame,
+                                    carla.ColorConverter.LogarithmicDepth)
 
 class Instant_Segmentation_Sensor(Sensor):
     """
@@ -238,13 +238,13 @@ class Instant_Segmentation_Sensor(Sensor):
         """
         # Process the instance segmentation data here
         anomaly_name = self.get_anomaly_name_from_list(anomaly)
-        if len(self.queue) != 0:
-            instance_data: carla.Image = self.queue.pop()
-            if anomaly_name:
-                instance_data.save_to_disk(
-                    'output/instance/' + str(run) + "/" +anomaly_name  + '_%06d' % instance_data.frame)
-            else:
-                instance_data.save_to_disk('output/instance/' + str(run) + '/normal_'  + '_%06d' % instance_data.frame)
+        # if len(self.queue) != 0:
+        instance_data: carla.Image = self.queue.get(True,1)
+        if anomaly_name:
+            instance_data.save_to_disk(
+                'output/' + str(run) +'/instance'  + "/" +anomaly_name  + '_%06d' % instance_data.frame)
+        else:
+            instance_data.save_to_disk('output/' + str(run) +'/instance'  + '/normal_'  + '_%06d' % instance_data.frame)
 
 class Collision_Sensor(Sensor):
     """

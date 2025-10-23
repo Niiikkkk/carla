@@ -115,7 +115,8 @@ def benchmark():
         "trafficcone", "roadsigntwisted", "roadsignvandalized", "trolley",
         "trunkcar", "washingmachine", "woodpalette", "wheelchair", "box",
         #DYN
-        "labrador", "person", "bird", "drone", "trashcan", "garbagebagwind",
+        "labrador", "person", "bird", "trashcan", "garbagebagwind"
+        #"drone"
     ]
 
     list_large_anomalies = [
@@ -141,7 +142,8 @@ def benchmark():
     args.radar = True
     args.instance = True
     args.lidar_semantic = True
-    number_of_runs = 10
+
+    number_of_runs = 1
     seed = 42
     args.log = True
     # NOTE: fps and sensor_tick are linked. If I have 20 fps, then the tick will be every 1/20 = 0.05 seconds. So the sensor tick should be >= 0.05.
@@ -163,6 +165,7 @@ def benchmark():
     for run in range(number_of_runs):
         random.seed(seed+run)
         args.seed = seed+run
+
         number_of_tiny_anomalies = random.randint(1, 3)
         tiny_anomalies = random.sample(list_tiny_anomalies, number_of_tiny_anomalies)
         tiny = build_arg_anomalies(tiny_anomalies,"tiny")
@@ -189,8 +192,7 @@ def benchmark():
         #randomly select number of pedestrians
         args.number_of_pedestrians = random.randint(10, 40)
         #args.number_of_pedestrians = 0
-
-        #args.spawn_points = [carla.Transform(carla.Location(x=-8.81999023,y=68,z=0.6), carla.Rotation(0,0,0))]
+        #args.spawn_points = [carla.Transform(carla.Location(x=-20,y=135.89886719,z=0.6), carla.Rotation(0,0,0))]
 
         print(f"Running run {run+1} / {number_of_runs} with the following parameters:")
         print(args)
