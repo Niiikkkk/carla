@@ -547,6 +547,44 @@ def save_radar(radar_measurements,anomaly_name,run):
     # Convert the radar measurements to a numpy array
     # Raw data is the form of [velocity, azimuth, altitude, depth]
     radar_points_list = []
+    cols = []
+    for detect in radar_measurements:
+        x = detect.depth * math.cos(detect.altitude) * math.cos(detect.azimuth)
+        y = detect.depth * math.cos(detect.altitude) * math.sin(detect.azimuth)
+        z = detect.depth * math.sin(detect.altitude)
+
+        radar_points_list.append([x,y,z,detect.velocity])
+
+        def clamp(min_v, max_v, value):
+            return max(min_v, min(value, max_v))
+        norm_velocity = detect.velocity / 7.5
+        r = int(clamp(0.0, 1.0, 1.0 - norm_velocity))
+        g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)))
+        b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)))
+        cols.append([r,g,b])
+
+    radar_points_list = np.array(radar_points_list)
+    pcd = o3d.geometry.PointCloud()
+    points = radar_points_list[:,:-1]
+    points[:,1] = -points[:,1]
+    pcd.points = o3d.utility.Vector3dVector(points)
+    pcd.colors = o3d.utility.Vector3dVector(cols)
+    # crete the direcotry if it does not exist
+    if not os.path.exists("output/"+str(run)+"/radar/"):
+        os.makedirs("output/"+str(run)+"/radar/")
+    if anomaly_name:
+        o3d.io.write_point_cloud(f"output/"+str(run)+"/radar/"+"/"+anomaly_name+str(run)+f"_radar-{radar_measurements.frame}.ply", pcd)
+    else:
+        o3d.io.write_point_cloud(f"output/"+str(run)+"/radar/"+"/normal_" + str(run) + f"_radar-{radar_measurements.frame}.ply", pcd)
+
+def save_radar_old(radar_measurements,anomaly_name,run):
+    """Save the radar measurements.
+    Args:
+        radar_measurements (carla.RadarMeasurement): The radar measurements object.
+    """
+    # Convert the radar measurements to a numpy array
+    # Raw data is the form of [velocity, azimuth, altitude, depth]
+    radar_points_list = []
     for detect in radar_measurements:
         x = detect.depth * math.cos(detect.altitude) * math.cos(detect.azimuth)
         y = detect.depth * math.cos(detect.altitude) * math.sin(detect.azimuth)

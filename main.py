@@ -207,7 +207,7 @@ def main(args, bench_run=None):
 
             # Handle the sensors data
             handle_sensor_data(args, args.seed, sensors)
-            info("Frame: " + str(world.get_snapshot().frame))
+            # info("Frame: " + str(world.get_snapshot().frame))
 
     except KeyboardInterrupt:
         error("Simulation interrupted by user.", exc_info=True)
@@ -595,13 +595,13 @@ def benchmark():
     args.instance = True
     args.lidar_semantic = True
 
-    number_of_runs = 1
+    number_of_runs = 50
     seed = 40
     args.log = True
     # NOTE: fps and sensor_tick are linked. If I have 20 fps, then the tick will be every 1/20 = 0.05 seconds. So the sensor tick should be >= 0.05.
     # If the set sensor_tick 0.1 with an FPS of 20, the sensor will capture data every 2 frames.
-    args.fps = 20
-    args.sensor_tick = '0.05'
+    args.fps = 30
+    args.sensor_tick = str(1/args.fps)
     args.hybrid = True
 
 

@@ -42,7 +42,7 @@ def gen_point_video(path):
     renderer.scene.set_background([0, 0, 0, 1])  # black background
     renderer.scene.add_geometry("pcd", pcd, mat)
 
-    offset = [0,15,0]
+    offset = [0,0,0]
     renderer.scene.camera.look_at(center + offset, center + offset + [0,0,5], [0, 0, 1])
 
     # Prepare video writer
@@ -67,4 +67,4 @@ def gen_point_video(path):
 
 if __name__ == '__main__':
     #gen_video("output/40/depth/logaritmic")
-    gen_point_video("output/1/semantic_lidar")
+    gen_point_video("output/40/radar")
